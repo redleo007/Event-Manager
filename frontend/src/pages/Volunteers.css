@@ -16,7 +16,7 @@
 
 .page-header p {
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 0.95rem;
 }
 
 .header-actions {
@@ -31,7 +31,7 @@
   border-radius: 8px;
   padding: 10px 12px;
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -98,7 +98,7 @@
   background: rgba(0, 255, 65, 0.2);
   color: var(--neon-lime);
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 0.8rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -110,7 +110,7 @@
 
 .volunteer-info p {
   margin: 8px 0;
-  font-size: 13px;
+  font-size: 0.9rem;
   color: var(--text-secondary);
 }
 
@@ -163,13 +163,13 @@
 
 .stat-item .label {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: 0.875rem;
   margin-bottom: 8px;
 }
 
 .stat-item .value {
   color: var(--neon-cyan);
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 700;
 }
 
@@ -212,3 +212,4 @@
     width: 100%;
   }
 }
+

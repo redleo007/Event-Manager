@@ -86,7 +86,7 @@
   border: 1px solid transparent;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.95rem;
   font-weight: 600;
   transition: all 0.3s ease;
   text-decoration: none;
@@ -142,12 +142,12 @@
 
 .btn-lg {
   padding: 14px 28px;
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .btn-sm {
   padding: 6px 12px;
-  font-size: 12px;
+  font-size: 0.875rem;
 }
 
 /* Forms */
@@ -161,7 +161,7 @@
   margin-bottom: 8px;
   font-weight: 600;
   color: var(--neon-cyan);
-  font-size: 14px;
+  font-size: 0.95rem;
 }
 
 .form-group input,
@@ -172,7 +172,7 @@
   border-radius: 8px;
   padding: 12px;
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 1rem;
   transition: all 0.3s ease;
   font-family: inherit;
 }
@@ -224,7 +224,7 @@
   display: inline-block;
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 600;
   text-align: center;
 }
@@ -308,18 +308,18 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 {
-  font-size: 32px;
+  font-size: 2rem;
   margin-bottom: 10px;
   text-shadow: 0 0 10px rgba(0, 217, 255, 0.3);
 }
 
 h2 {
-  font-size: 24px;
+  font-size: 1.75rem;
   margin-bottom: 10px;
 }
 
 h3 {
-  font-size: 20px;
+  font-size: 1.5rem;
   margin-bottom: 10px;
 }
 
@@ -337,14 +337,15 @@ p {
   }
 
   h1 {
-    font-size: 24px;
+    font-size: 1.5rem;
   }
 
   h2 {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
 
   .container {
     padding: 0 15px;
   }
 }
+

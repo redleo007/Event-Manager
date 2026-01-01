@@ -15,7 +15,7 @@
 
 .page-header p {
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 0.95rem;
 }
 
 /* Layout */
@@ -50,7 +50,7 @@
 
 .panel-header h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 1.125rem;
   color: var(--neon-cyan);
 }
 
@@ -59,7 +59,7 @@
   color: var(--neon-cyan);
   padding: 4px 10px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
@@ -75,7 +75,7 @@
   border: 1px solid var(--border-color);
   border-radius: 8px;
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: 0.9rem;
   transition: all 0.3s ease;
 }
 
@@ -123,20 +123,20 @@
 
 .event-item-header h3 {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.95rem;
   color: var(--text-primary);
   flex: 1;
 }
 
 .event-date {
-  font-size: 12px;
+  font-size: 0.875rem;
   color: var(--neon-cyan);
   white-space: nowrap;
 }
 
 .event-location {
   margin: 0;
-  font-size: 12px;
+  font-size: 0.875rem;
   color: var(--text-secondary);
 }
 
@@ -164,19 +164,19 @@
 
 .event-header h2 {
   margin: 0 0 8px 0;
-  font-size: 28px;
+  font-size: 1.75rem;
   color: var(--neon-cyan);
 }
 
 .event-meta {
   margin: 0 0 12px 0;
-  font-size: 14px;
+  font-size: 0.95rem;
   color: var(--text-secondary);
 }
 
 .event-description {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.95rem;
   color: var(--text-secondary);
   max-width: 600px;
 }
@@ -194,14 +194,14 @@
 }
 
 .date-info .label {
-  font-size: 12px;
+  font-size: 0.875rem;
   color: var(--text-secondary);
   text-transform: uppercase;
   font-weight: 600;
 }
 
 .date-info .value {
-  font-size: 12px;
+  font-size: 0.875rem;
   color: var(--neon-cyan);
 }
 
@@ -247,7 +247,7 @@
 }
 
 .stat-icon {
-  font-size: 24px;
+  font-size: 1.5rem;
 }
 
 .stat-content {
@@ -257,14 +257,14 @@
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: 0.875rem;
   color: var(--text-secondary);
   text-transform: uppercase;
   font-weight: 600;
 }
 
 .stat-value {
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--neon-cyan);
 }
@@ -282,7 +282,7 @@
   border: 1px solid var(--border-color);
   border-radius: 8px;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -309,7 +309,7 @@
 
 .attendance-section h3 {
   margin: 0 0 16px 0;
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--neon-cyan);
 }
 
@@ -330,7 +330,7 @@
 .table thead th {
   padding: 12px;
   text-align: left;
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 600;
   text-transform: uppercase;
   color: var(--neon-cyan);
@@ -347,7 +347,7 @@
 
 .table tbody td {
   padding: 14px 12px;
-  font-size: 13px;
+  font-size: 0.9rem;
   color: var(--text-secondary);
 }
 
@@ -357,14 +357,14 @@
 }
 
 .marked-at {
-  font-size: 12px;
+  font-size: 0.875rem;
   color: var(--text-secondary);
 }
 
 .badge {
   padding: 4px 10px;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 0.8rem;
   font-weight: 600;
   text-transform: uppercase;
   display: inline-block;
@@ -389,7 +389,7 @@
 
 .empty-state p {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.95rem;
 }
 
 /* Loading */
@@ -479,20 +479,21 @@
   }
 
   .page-header h1 {
-    font-size: 24px;
+    font-size: 1.5rem;
   }
 
   .event-header h2 {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
 
   .table thead th {
-    font-size: 11px;
+    font-size: 0.8rem;
     padding: 10px;
   }
 
   .table tbody td {
     padding: 10px;
-    font-size: 12px;
+    font-size: 0.875rem;
   }
 }
+

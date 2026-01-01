@@ -71,9 +71,10 @@ api.interceptors.response.use(
   (response) => {
     // response.data contains the ApiResponse { success, data, timestamp }
     // Return the data field for easier access in components
+    const responseData = response.data;
     return {
       ...response,
-      data: response.data.data,
+      data: responseData && responseData.data !== undefined ? responseData.data : responseData,
     };
   },
   (error) => {

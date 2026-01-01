@@ -12,7 +12,7 @@
 
 .page-header p {
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 0.95rem;
 }
 
 .stats-section {
@@ -107,19 +107,19 @@
 .participant-info h4 {
   margin: 0 0 4px 0;
   color: var(--neon-cyan);
-  font-size: 14px;
+  font-size: 0.95rem;
   font-weight: 600;
 }
 
 .participant-info p {
   margin: 0 0 2px 0;
-  font-size: 12px;
+  font-size: 0.875rem;
   color: var(--text-secondary);
 }
 
 .critical-since {
   color: var(--neon-magenta) !important;
-  font-size: 11px !important;
+  font-size: 0.8rem !important;
   font-weight: 600;
   margin-top: 6px;
 }
@@ -174,14 +174,14 @@
 }
 
 .summary-item .label {
-  font-size: 11px;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   text-transform: uppercase;
   font-weight: 600;
 }
 
 .summary-item .value {
-  font-size: 13px;
+  font-size: 0.9rem;
   color: var(--neon-cyan);
   font-weight: 500;
 }
@@ -260,13 +260,13 @@
 .event-name {
   color: var(--neon-cyan);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 0.9rem;
 }
 
 .timeline-meta {
   display: flex;
   gap: 12px;
-  font-size: 12px;
+  font-size: 0.875rem;
   color: var(--text-secondary);
   margin-bottom: 0;
 }
@@ -277,7 +277,7 @@
   color: var(--neon-magenta);
   padding: 8px 10px;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 0.8rem;
   font-weight: 600;
   margin-top: 8px;
 }
@@ -286,7 +286,7 @@
   text-align: center;
   color: var(--text-secondary);
   padding: 30px 20px;
-  font-size: 14px;
+  font-size: 0.95rem;
 }
 
 .loading-container {
@@ -360,6 +360,7 @@
   }
 
   .event-name {
-    font-size: 12px;
+    font-size: 0.875rem;
   }
 }
+

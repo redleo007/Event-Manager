@@ -12,7 +12,7 @@
 
 .page-header p {
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 0.95rem;
 }
 
 .blocklist-stat {
@@ -52,12 +52,12 @@
 .item-header .email {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 0.9rem;
 }
 
 .item-details p {
   margin: 8px 0;
-  font-size: 13px;
+  font-size: 0.9rem;
   color: var(--text-secondary);
 }
 
@@ -135,3 +135,4 @@
     padding: 16px !important;
   }
 }
+

@@ -19,7 +19,7 @@
 .dashboard-header p {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 0.95rem;
 }
 
 .stats-grid {
@@ -96,13 +96,13 @@
 }
 
 .stat-icon {
-  font-size: 32px;
+  font-size: 2rem;
   min-width: 50px;
   text-align: center;
 }
 
 .stat-content h3 {
-  font-size: 12px;
+  font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 8px;
@@ -111,7 +111,7 @@
 }
 
 .stat-value {
-  font-size: 32px;
+  font-size: 2rem;
   font-weight: 700;
   margin: 0 0 4px 0;
   color: inherit;
@@ -119,7 +119,7 @@
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: 0.875rem;
   color: var(--text-secondary);
   margin: 0;
 }
@@ -157,12 +157,12 @@
 
 .latest-event-section h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 
 .event-name {
   color: var(--neon-cyan);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   margin: 0;
 }
@@ -212,7 +212,7 @@
 }
 
 .event-stat-icon {
-  font-size: 24px;
+  font-size: 1.5rem;
   min-width: 30px;
   text-align: center;
 }
@@ -224,7 +224,7 @@
 }
 
 .event-stat-content .label {
-  font-size: 11px;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-secondary);
@@ -258,7 +258,7 @@
 .participants-overview h3 {
   margin: 0 0 16px 0;
   color: var(--neon-cyan);
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .participants-grid {
@@ -276,7 +276,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
+  font-size: 0.9rem;
   transition: all 0.3s ease;
   cursor: pointer;
 }
@@ -308,7 +308,7 @@
 }
 
 .badge-icon {
-  font-size: 16px;
+  font-size: 1rem;
   min-width: 20px;
 }
 
@@ -323,7 +323,7 @@
   text-align: center;
   padding: 20px;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 0.95rem;
   margin: 0;
 }
 
@@ -371,7 +371,7 @@
 }
 
 .activity-icon {
-  font-size: 24px;
+  font-size: 1.5rem;
   min-width: 40px;
   text-align: center;
 }
@@ -379,17 +379,17 @@
 .activity-content h4 {
   margin: 0 0 5px 0;
   color: var(--neon-cyan);
-  font-size: 14px;
+  font-size: 0.95rem;
 }
 
 .activity-content p {
   margin: 0 0 5px 0;
-  font-size: 13px;
+  font-size: 0.9rem;
   color: var(--text-secondary);
 }
 
 .activity-content time {
-  font-size: 12px;
+  font-size: 0.875rem;
   color: var(--text-secondary);
   opacity: 0.7;
 }
@@ -437,7 +437,7 @@
 }
 
 .action-icon {
-  font-size: 32px;
+  font-size: 2rem;
   min-width: 50px;
   text-align: center;
 }
@@ -445,12 +445,12 @@
 .action-text h4 {
   margin: 0 0 4px 0;
   color: var(--neon-cyan);
-  font-size: 14px;
+  font-size: 0.95rem;
 }
 
 .action-text p {
   margin: 0;
-  font-size: 12px;
+  font-size: 0.875rem;
   color: var(--text-secondary);
 }
 
@@ -516,7 +516,7 @@
   }
 
   .stat-value {
-    font-size: 24px;
+    font-size: 1.5rem;
   }
 
   .actions-grid {
@@ -531,4 +531,5 @@
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
 }
+
 
