@@ -16,6 +16,15 @@ export const eventsAPI = {
   getById: (id: string) => api.get(`/events/${id}`),
   update: (id: string, data: any) => api.put(`/events/${id}`, data),
   delete: (id: string) => api.delete(`/events/${id}`),
+  // Event-scoped participant and attendance management
+  getParticipants: (eventId: string) => api.get(`/events/${eventId}/participants`),
+  getAttendance: (eventId: string) => api.get(`/events/${eventId}/participants/attendance`),
+  deleteAllParticipants: (eventId: string) => api.delete(`/events/${eventId}/participants`),
+  deleteSelectedParticipants: (eventId: string, participantIds: string[]) => 
+    api.post(`/events/${eventId}/participants/bulk-delete`, { participant_ids: participantIds }),
+  deleteAllAttendance: (eventId: string) => api.delete(`/events/${eventId}/participants/attendance`),
+  deleteSelectedAttendance: (eventId: string, attendanceIds: string[]) =>
+    api.post(`/events/${eventId}/participants/attendance/bulk-delete`, { attendance_ids: attendanceIds }),
 };
 
 // Participants API
@@ -48,6 +57,14 @@ export const blocklistAPI = {
   add: (data: any) => api.post('/blocklist', data),
   getAll: () => api.get('/blocklist'),
   remove: (participantId: string) => api.delete(`/blocklist/${participantId}`),
+};
+
+// Imports API
+export const importsAPI = {
+  getByEvent: (eventId: string, days: number = 30) => api.get('/imports', { params: { event_id: eventId, days } }),
+  getHistoryLast30Days: (eventId: string) => api.get('/imports', { params: { event_id: eventId, days: 30 } }),
+  getSession: (sessionId: string) => api.get(`/imports/${sessionId}`),
+  delete: (sessionId: string) => api.delete(`/imports/${sessionId}`),
 };
 
 // Volunteers API

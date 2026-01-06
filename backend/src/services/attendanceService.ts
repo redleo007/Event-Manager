@@ -219,3 +219,134 @@ export const bulkImportAttendanceBatch = async (attendanceRecords: Array<{
 
   return { imported, failed, errors };
 };
+
+// Bulk import attendance with snapshot tracking for rollback capability
+export const bulkImportAttendanceWithSnapshots = async (
+  attendanceRecords: Array<{
+    name: string;
+    email: string;
+    event_id: string;
+    attendance_status: 'attended' | 'not_attended' | 'no_show';
+  }>,
+  import_session_id: string
+): Promise<{ imported: number; failed: number; errors: string[] }> => {
+  const supabase = getSupabaseClient();
+  let imported = 0;
+  let failed = 0;
+  const errors: string[] = [];
+
+  for (const record of attendanceRecords) {
+    try {
+      // Find or create participant
+      let { data: existingParticipant } = await supabase
+        .from('participants')
+        .select('id, is_blocklisted')
+        .eq('email', record.email)
+        .single();
+
+      let participantId: string;
+      let isNewParticipant = false;
+
+      if (existingParticipant) {
+        participantId = existingParticipant.id;
+      } else {
+        // Create new participant
+        const { data: newParticipant, error: participantError } = await supabase
+          .from('participants')
+          .insert([{
+            name: record.name.trim(),
+            email: record.email.trim(),
+            is_blocklisted: false,
+            import_session_id,
+          }])
+          .select()
+          .single();
+
+        if (participantError) throw new Error(`Failed to create participant: ${participantError.message}`);
+        participantId = newParticipant.id;
+        isNewParticipant = true;
+      }
+
+      // Get current attendance status if exists
+      const { data: existingAttendance } = await supabase
+        .from('attendance')
+        .select('id, status')
+        .eq('participant_id', participantId)
+        .eq('event_id', record.event_id)
+        .single();
+
+      // Create snapshot before making changes
+      const previousStatus = existingAttendance?.status || null;
+      const { data: participant } = await supabase
+        .from('participants')
+        .select('is_blocklisted')
+        .eq('id', participantId)
+        .single();
+
+      await supabase.from('attendance_snapshots').insert([{
+        import_session_id,
+        participant_id: participantId,
+        event_id: record.event_id,
+        previous_status: previousStatus,
+        previous_blocklist_status: participant?.is_blocklisted || false,
+        is_new_participant: isNewParticipant,
+      }]);
+
+      // Normalize status
+      let attendanceStatus: 'attended' | 'no_show' = 'no_show';
+      if (record.attendance_status === 'attended') {
+        attendanceStatus = 'attended';
+      } else if (record.attendance_status === 'not_attended') {
+        attendanceStatus = 'no_show';
+      }
+
+      // Create or update attendance record
+      if (existingAttendance) {
+        const { error: updateError } = await supabase
+          .from('attendance')
+          .update({
+            status: attendanceStatus,
+            marked_at: new Date().toISOString(),
+            import_session_id,
+          })
+          .eq('id', existingAttendance.id);
+
+        if (updateError) throw new Error(`Failed to update attendance: ${updateError.message}`);
+      } else {
+        const { error: insertError } = await supabase
+          .from('attendance')
+          .insert([{
+            event_id: record.event_id,
+            participant_id: participantId,
+            status: attendanceStatus,
+            marked_at: new Date().toISOString(),
+            import_session_id,
+          }]);
+
+        if (insertError) throw new Error(`Failed to create attendance: ${insertError.message}`);
+      }
+
+      // Auto-blocklist if no-show count reaches threshold
+      if (attendanceStatus === 'no_show') {
+        const noShowCount = await getNoShowCount(participantId);
+        if (noShowCount >= 2) {
+          await supabase
+            .from('participants')
+            .update({
+              is_blocklisted: true,
+              blocklist_reason: `Auto-blocklisted: ${noShowCount} no-shows`,
+            })
+            .eq('id', participantId);
+        }
+      }
+
+      imported++;
+    } catch (error) {
+      failed++;
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      errors.push(`${record.email}: ${errorMsg}`);
+    }
+  }
+
+  return { imported, failed, errors };
+};

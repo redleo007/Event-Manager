@@ -67,7 +67,10 @@ export const createParticipantWithEvent = async (participantData: { full_name: s
   return data as Participant;
 };
 
-export const bulkCreateParticipantsWithEvent = async (participantsData: Array<{ full_name: string; event_id: string }>): Promise<Participant[]> => {
+export const bulkCreateParticipantsWithEvent = async (
+  participantsData: Array<{ full_name: string; event_id: string }>,
+  import_session_id?: string
+): Promise<Participant[]> => {
   const supabase = getSupabaseClient();
   
   // Prepare all participants for batch insert
@@ -75,6 +78,7 @@ export const bulkCreateParticipantsWithEvent = async (participantsData: Array<{ 
     name: p.full_name.trim(),
     email: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${Math.random().toString(36).substr(2, 3)}@eventpass.local`,
     is_blocklisted: false,
+    import_session_id: import_session_id || null,
   }));
 
   // Batch insert all participants
@@ -90,6 +94,7 @@ export const bulkCreateParticipantsWithEvent = async (participantsData: Array<{ 
     event_id: participantsData[idx].event_id,
     participant_id: participant.id,
     status: 'no_show' as const,
+    import_session_id: import_session_id || null,
   }));
 
   // Batch insert all attendance records
@@ -173,4 +178,90 @@ export const getBlocklistedParticipantsCount = async (): Promise<number> => {
 
   if (error) throw new Error(`Failed to count blocklisted participants: ${error.message}`);
   return count || 0;
+};
+
+/**
+ * Bulk import participants with deduplication for an event
+ * Prevents duplicate inserts based on email matching
+ */
+export const bulkCreateParticipantsWithEventDedup = async (
+  participantsData: Array<{ full_name: string; email?: string; event_id: string }>,
+  import_session_id?: string
+): Promise<{ created: Participant[]; duplicates: number }> => {
+  const supabase = getSupabaseClient();
+
+  const created: Participant[] = [];
+  let duplicateCount = 0;
+
+  // Process each participant
+  for (const participantData of participantsData) {
+    const email = participantData.email?.trim();
+    const fullName = participantData.full_name?.trim();
+
+    // Check for existing participant by email or name
+    let existingParticipant = null;
+
+    if (email) {
+      const { data } = await supabase
+        .from('participants')
+        .select('id, name, email')
+        .eq('email', email)
+        .single();
+      existingParticipant = data;
+    } else if (fullName) {
+      const { data } = await supabase
+        .from('participants')
+        .select('id, name, email')
+        .eq('name', fullName)
+        .single();
+      existingParticipant = data;
+    }
+
+    if (existingParticipant) {
+      duplicateCount++;
+      // Check if attendance record already exists for this event
+      const { data: existingAttendance } = await supabase
+        .from('attendance')
+        .select('id')
+        .eq('participant_id', existingParticipant.id)
+        .eq('event_id', participantData.event_id)
+        .single();
+
+      if (!existingAttendance) {
+        // Create attendance record for existing participant
+        await supabase.from('attendance').insert({
+          event_id: participantData.event_id,
+          participant_id: existingParticipant.id,
+          status: 'no_show',
+          import_session_id: import_session_id || null,
+        });
+      }
+    } else {
+      // Create new participant
+      const { data: newParticipant, error: insertError } = await supabase
+        .from('participants')
+        .insert({
+          name: fullName,
+          email: email || `${Date.now()}_${Math.random().toString(36).substr(2, 9)}@eventpass.local`,
+          is_blocklisted: false,
+          import_session_id: import_session_id || null,
+        })
+        .select()
+        .single();
+
+      if (insertError) throw new Error(`Failed to create participant: ${insertError.message}`);
+
+      // Create attendance record
+      await supabase.from('attendance').insert({
+        event_id: participantData.event_id,
+        participant_id: newParticipant.id,
+        status: 'no_show',
+        import_session_id: import_session_id || null,
+      });
+
+      created.push(newParticipant as Participant);
+    }
+  }
+
+  return { created, duplicates: duplicateCount };
 };
