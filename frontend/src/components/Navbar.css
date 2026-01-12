@@ -1,0 +1,205 @@
+/* Navbar Styling */
+.navbar {
+  height: 60px;
+  background: linear-gradient(90deg, rgba(5, 8, 17, 0.98) 0%, rgba(15, 15, 30, 0.98) 100%);
+  border-bottom: 2px solid var(--neon-cyan);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  box-shadow: 0 0 30px rgba(0, 217, 255, 0.1);
+}
+
+/* Left Section: Hamburger + Brand */
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Hamburger Menu Button */
+.hamburger-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 217, 255, 0.05);
+  border: 1px solid rgba(0, 217, 255, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.3s ease;
+  color: var(--neon-cyan);
+}
+
+.hamburger-btn:hover {
+  background: rgba(0, 217, 255, 0.15);
+  box-shadow: 0 0 10px rgba(0, 217, 255, 0.3);
+}
+
+.hamburger-btn:active {
+  transform: scale(0.95);
+}
+
+/* Brand on Left */
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--neon-cyan);
+  font-weight: 700;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+.brand-link:hover {
+  text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+  gap: 12px;
+}
+
+.brand-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.brand-text {
+  white-space: nowrap;
+}
+
+/* User Info & Logout on Right */
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--neon-cyan);
+}
+
+.user-name {
+  font-weight: 600;
+}
+
+.logout-btn {
+  padding: 8px 16px;
+  background: rgba(255, 0, 0, 0.1);
+  color: #ff4444;
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 0, 0, 0.2);
+  color: #ff6666;
+  border-color: rgba(255, 0, 0, 0.5);
+  text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+.logout-btn:active {
+  transform: scale(0.98);
+}
+
+/* Tablet: 768px and below */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0 16px;
+    height: 56px;
+  }
+
+  .hamburger-btn {
+    display: flex;
+  }
+
+  .navbar-left {
+    gap: 12px;
+  }
+
+  .brand-link {
+    font-size: 1.1rem;
+  }
+
+  .brand-icon {
+    font-size: 20px;
+  }
+
+  .user-name {
+    display: none;
+  }
+
+  .logout-btn {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Mobile: 480px and below */
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0 12px;
+    height: 52px;
+  }
+
+  .hamburger-btn {
+    width: 28px;
+    height: 28px;
+    gap: 3px;
+  }
+
+  .hamburger-line {
+    width: 16px;
+    height: 2px;
+  }
+
+  .brand-text {
+    display: none;
+  }
+
+  .brand-link {
+    font-size: 1rem;
+  }
+
+  .brand-icon {
+    font-size: 18px;
+  }
+
+  .user-avatar {
+    font-size: 16px;
+  }
+
+  .logout-btn {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+}

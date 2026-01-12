@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { AlertTriangle, Ban, Calendar, AlertCircle, Clock, CheckCircle } from 'lucide-react';
 import { attendanceAPI, participantsAPI, eventsAPI, blocklistAPI } from '../api/client';
 import { useAsync } from '../utils/hooks';
 import { formatDate, formatDateTime } from '../utils/formatters';
@@ -148,7 +149,7 @@ export function NoShows() {
 
       <div className="stats-section">
         <div className="stat-card stat-card-warning">
-          <div className="stat-icon">⚠️</div>
+          <div className="stat-icon"><AlertTriangle size={40} /></div>
           <div className="stat-content">
             <h3>Total No-Shows</h3>
             <p className="stat-value">{noShowRecords.length}</p>
@@ -156,7 +157,7 @@ export function NoShows() {
         </div>
 
         <div className="stat-card stat-card-danger">
-          <div className="stat-icon">🚨</div>
+          <div className="stat-icon"><AlertCircle size={40} /></div>
           <div className="stat-content">
             <h3>Critical (2+)</h3>
             <p className="stat-value">{criticalParticipants.length}</p>
@@ -164,7 +165,7 @@ export function NoShows() {
         </div>
 
         <div className="stat-card stat-card-blocklisted">
-          <div className="stat-icon">🚫</div>
+          <div className="stat-icon"><Ban size={40} /></div>
           <div className="stat-content">
             <h3>Blocklisted</h3>
             <p className="stat-value">{criticalParticipants.filter(p => p.is_blocklisted).length}</p>
@@ -199,7 +200,7 @@ export function NoShows() {
                       <p>{p.email}</p>
                       {p.noShowCount >= 2 && (
                         <p className="critical-since">
-                          🚨 Critical since {formatDate(p.criticalSince || '')}
+                          <AlertCircle size={16} style={{ display: 'inline', marginRight: '8px' }} /> Critical since {formatDate(p.criticalSince || '')}
                         </p>
                       )}
                     </div>
@@ -208,7 +209,7 @@ export function NoShows() {
                         {p.noShowCount} no-show{p.noShowCount > 1 ? 's' : ''}
                       </span>
                       {p.is_blocklisted && (
-                        <span className="badge badge-blocklisted">🚫 Blocklisted</span>
+                        <span className="badge badge-blocklisted"><Ban size={14} /> Blocklisted</span>
                       )}
                     </div>
                   </div>
@@ -243,7 +244,7 @@ export function NoShows() {
               {selectedParticipantData.is_blocklisted && (
                 <div className="summary-item blocklisted">
                   <span className="label">Status:</span>
-                  <span className="value">🚫 Added to Blocklist</span>
+                  <span className="value"><Ban size={16} /> Added to Blocklist</span>
                 </div>
               )}
             </div>
@@ -272,12 +273,12 @@ export function NoShows() {
                           <span className="badge badge-danger">No-Show #{index + 1}</span>
                         </div>
                         <div className="timeline-meta">
-                          <span>📅 Event: {formatDate(record.date)}</span>
-                          <span>🕐 Marked: {formatDateTime(record.marked_at)}</span>
+                          <span><Calendar size={16} /> Event: {formatDate(record.date)}</span>
+                          <span><Clock size={14} /> Marked: {formatDateTime(record.marked_at)}</span>
                         </div>
                         {index === 1 && filteredRecords.length >= 2 && (
                           <div className="timeline-alert">
-                            ⚠️ Critical threshold reached - Auto-block triggered
+                            <AlertTriangle size={16} /> Critical threshold reached - Auto-block triggered
                           </div>
                         )}
                       </div>
@@ -291,11 +292,11 @@ export function NoShows() {
 
       {criticalParticipants.length > 0 && (
         <div className="alert alert-warning" style={{ marginTop: '30px' }}>
-          <strong>⚠️ Auto-Block Alert:</strong> {criticalParticipants.length} participant(s)
+          <strong><AlertTriangle size={16} style={{ display: 'inline', marginRight: '8px' }} /> Auto-Block Alert:</strong> {criticalParticipants.length} participant(s)
           with 2 or more no-shows have been automatically added to the blocklist.
           {criticalParticipants.filter(p => p.is_blocklisted).length > 0 && (
             <p style={{ marginTop: '8px' }}>
-              ✅ {criticalParticipants.filter(p => p.is_blocklisted).length} of {criticalParticipants.length} are now blocklisted.
+              <CheckCircle size={16} style={{ display: 'inline', marginRight: '8px' }} /> {criticalParticipants.filter(p => p.is_blocklisted).length} of {criticalParticipants.length} are now blocklisted.
             </p>
           )}
         </div>

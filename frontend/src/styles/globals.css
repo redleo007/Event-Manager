@@ -78,4 +78,135 @@ button, input, textarea, select {
 label {
   font-size: 0.95rem;
   line-height: 1.5;
+}
+
+/* Card Component */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 217, 255, 0.05);
+  transition: all 0.3s ease;
+  width: 100%;
+  min-height: auto;
+}
+
+.card:hover {
+  box-shadow: 0 6px 16px rgba(0, 217, 255, 0.1);
+  border-color: rgba(0, 217, 255, 0.5);
+}
+
+/* Button Components */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+  color: var(--dark-bg);
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 0 20px rgba(0, 217, 255, 0.4);
+}
+
+.btn-secondary {
+  background: rgba(0, 217, 255, 0.1);
+  color: var(--neon-cyan);
+  border: 1px solid var(--neon-cyan);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(0, 217, 255, 0.2);
+  box-shadow: 0 0 15px rgba(0, 217, 255, 0.3);
+}
+
+.btn-danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.2);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.btn-warning {
+  background: rgba(234, 179, 8, 0.1);
+  color: #eab308;
+  border: 1px solid #eab308;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background: rgba(234, 179, 8, 0.2);
+  box-shadow: 0 0 15px rgba(234, 179, 8, 0.3);
+}
+
+.btn-success {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border: 1px solid #22c55e;
+}
+
+.btn-success:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.2);
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+}
+
+.btn-info {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+}
+
+.btn-info:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+.btn-sm {
+  padding: 6px 10px;
+  font-size: 0.8rem;
+}
+
+.btn-lg {
+  padding: 12px 24px;
+  font-size: 1rem;
+}
+
+/* Grid Layouts */
+.volunteers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
 

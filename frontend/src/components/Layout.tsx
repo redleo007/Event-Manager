@@ -1,90 +1,76 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  Upload,
+  Calendar,
+  History,
+  Ban,
+  AlertCircle,
+  Users,
+  ClipboardList,
+  Settings,
+} from 'lucide-react';
+import { Navbar } from './Navbar';
 import './Layout.css';
 
 interface NavLink {
   path: string;
   label: string;
-  icon: string;
+  icon: React.ReactNode;
 }
 
-const navLinks: NavLink[] = [
-  { path: '/', label: 'Dashboard', icon: '📊' },
-  { path: '/import', label: 'Import & Attendance', icon: '📥' },
-  { path: '/events', label: 'Events', icon: '📅' },
-  { path: '/events-history', label: 'Events History', icon: '📜' },
-  { path: '/no-shows', label: 'No-Shows', icon: '❌' },
-  { path: '/blocklist', label: 'Blocklist', icon: '🚫' },
-  { path: '/volunteers', label: 'Volunteers', icon: '👥' },
-  { path: '/settings', label: 'Settings', icon: '⚙️' },
+const mainNavLinks: NavLink[] = [
+  { path: '/', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+  { path: '/import', label: 'Import & Attendance', icon: <Upload size={20} /> },
+  { path: '/events', label: 'Events', icon: <Calendar size={20} /> },
+  { path: '/events-history', label: 'Events history', icon: <History size={20} /> },
+  { path: '/assign-work', label: 'Assign Work', icon: <ClipboardList size={20} /> },
+  { path: '/blocklist', label: 'Blocklist', icon: <Ban size={20} /> },
+  { path: '/no-shows', label: 'No Shows', icon: <AlertCircle size={20} /> },
+  { path: '/volunteers', label: 'Volunteers', icon: <Users size={20} /> },
+  { path: '/settings', label: 'Settings', icon: <Settings size={20} /> },
 ];
 
-interface NavbarProps {
-  onLogout: () => void;
+interface SidebarProps {
+  isOpen: boolean;
+  isCollapsed: boolean;
+  onClose: () => void;
 }
 
-export function Navbar({ onLogout }: NavbarProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [adminUser, setAdminUser] = useState('');
+export function Sidebar({ isOpen, isCollapsed, onClose }: SidebarProps) {
   const location = useLocation();
 
-  useEffect(() => {
-    const user = localStorage.getItem('admin_user');
-    if (user) {
-      setAdminUser(user);
+  const isActive = (path: string) => {
+    if (path === '/') {
+      return location.pathname === '/';
     }
-  }, []);
-
-  const handleLogout = () => {
-    onLogout();
-    setIsOpen(false);
+    return location.pathname.startsWith(path);
   };
 
   return (
-    <nav className="navbar">
-      <div className="navbar-container">
-        <Link to="/" className="navbar-brand">
-          <img src="/logo.svg" alt="TechNexus Logo" className="brand-icon" />
-          <span className="brand-text">TechNexus</span>
-        </Link>
-        
-        <button 
-          className="navbar-toggle"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          ☰
-        </button>
-
-        <ul className={`navbar-menu ${isOpen ? 'active' : ''}`}>
-          {navLinks.map((link) => (
-            <li key={link.path} className="nav-item">
-              <Link
-                to={link.path}
-                className={`nav-link ${location.pathname === link.path ? 'active' : ''}`}
-                onClick={() => setIsOpen(false)}
-              >
-                <span className="nav-icon">{link.icon}</span>
-                <span className="nav-label">{link.label}</span>
-              </Link>
-            </li>
-          ))}
-          <li className="nav-item nav-divider"></li>
-          <li className="nav-item admin-section">
-            <div className="admin-info">
-              <span className="admin-avatar">👤</span>
-              <span className="admin-name">{adminUser}</span>
-            </div>
-            <button 
-              className="logout-btn"
-              onClick={handleLogout}
-              title="Logout"
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && <div className="sidebar-overlay" onClick={onClose}></div>}
+      
+      <div className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isOpen ? 'open' : ''}`}>
+        {/* Navigation Only */}
+        <nav className="sidebar-nav">
+          {mainNavLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className={`sidebar-link ${isActive(link.path) ? 'active' : ''}`}
+              title={isCollapsed ? link.label : ''}
+              onClick={onClose}
             >
-              🚪
-            </button>
-          </li>
-        </ul>
+              <span className="sidebar-icon">{link.icon}</span>
+              {!isCollapsed && <span className="sidebar-label">{link.label}</span>}
+            </Link>
+          ))}
+        </nav>
       </div>
-    </nav>
+    </>
   );
 }
 
@@ -94,28 +80,38 @@ interface LayoutProps {
 }
 
 export function Layout({ children, onLogout }: LayoutProps) {
-  const [scrolled, setScrolled] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 0);
-    };
+  const handleSidebarToggle = () => {
+    // On desktop: toggle collapse/expand
+    // On mobile: toggle open/close
+    const isMobile = window.innerWidth < 1024;
+    if (isMobile) {
+      setSidebarOpen(!sidebarOpen);
+    } else {
+      setSidebarCollapsed(!sidebarCollapsed);
+    }
+  };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const handleSidebarClose = () => {
+    setSidebarOpen(false);
+  };
 
   return (
-    <div className="layout">
-      <Navbar onLogout={onLogout} />
-      <main className={`main-content ${scrolled ? 'scrolled' : ''}`}>
-        <div className="container">
-          {children}
-        </div>
-      </main>
-      <footer className="footer">
-        <p>&copy; 2025 TechNexus. Production-Ready Event Management System.</p>
-      </footer>
+    <div className="layout-container">
+      <Navbar onLogout={onLogout} onSidebarToggle={handleSidebarToggle} />
+      <div className="layout-main">
+        <Sidebar isOpen={sidebarOpen} isCollapsed={sidebarCollapsed} onClose={handleSidebarClose} />
+        <main className="main-content">
+          <div className="container">
+            {children}
+          </div>
+          <footer className="footer">
+            <p>&copy; 2025 TechNexus. Production-Ready Event Management System.</p>
+          </footer>
+        </main>
+      </div>
     </div>
   );
 }

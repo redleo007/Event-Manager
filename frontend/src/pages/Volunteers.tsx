@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { X, Plus, Save, CheckCircle, Lock, Unlock, Trash2, Calendar, ClipboardList, Loader } from 'lucide-react';
 import { volunteersAPI } from '../api/client';
+import { VolunteerWorkRow, VolunteerWork } from '../components/VolunteerWorkRow';
 import { useAsync } from '../utils/hooks';
 import { formatDate } from '../utils/formatters';
 import './Volunteers.css';
@@ -18,6 +20,11 @@ export function Volunteers() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
+  const [showWorkHistory, setShowWorkHistory] = useState(false);
+  const [workHistory, setWorkHistory] = useState<VolunteerWork[]>([]);
+  const [loadingWork, setLoadingWork] = useState(false);
+  const [workFilter, setWorkFilter] = useState<{ volunteerId: string; volunteerName: string }>({ volunteerId: '', volunteerName: '' });
+  const [searchWork, setSearchWork] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -35,6 +42,25 @@ export function Volunteers() {
   useEffect(() => {
     refetch();
   }, [sortBy]);
+
+  // Load work history for selected volunteer - using real API
+  const handleViewWorkHistory = async (volunteerId: string, volunteerName: string) => {
+    setWorkFilter({ volunteerId, volunteerName });
+    setShowWorkHistory(true);
+    setLoadingWork(true);
+    try {
+      // Use real API endpoint: GET /volunteers/{volunteer_id}/work-history
+      const response = await volunteersAPI.getWorkHistory(volunteerId);
+      const workData: VolunteerWork[] = response.data || [];
+      setWorkHistory(workData);
+    } catch (error) {
+      // If endpoint doesn't exist yet, show empty state
+      console.log('Work history endpoint not yet available:', error);
+      setWorkHistory([]);
+    } finally {
+      setLoadingWork(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -122,6 +148,49 @@ export function Volunteers() {
     }
   };
 
+  // Handle deletion of work assignment
+  const handleDeleteWorkAssignment = async (workId: string) => {
+    if (!confirm('Delete this work assignment?')) return;
+
+    try {
+      await volunteersAPI.deleteWorkAssignment(workId);
+      setMessage({ type: 'success', text: 'Work assignment deleted' });
+      
+      // Reload work history
+      if (workFilter.volunteerId) {
+        const response = await volunteersAPI.getWorkHistory(workFilter.volunteerId);
+        setWorkHistory(response.data || []);
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to delete work assignment' });
+      console.error('Error deleting work:', error);
+    }
+  };
+
+  const handleDeleteAllWorkAssignments = async () => {
+    if (!workFilter.volunteerId) return;
+
+    try {
+      // Delete all work assignments for this volunteer
+      // Since the API might not have a bulk delete, we'll delete individually
+      const deletePromises = workHistory.map(work => 
+        volunteersAPI.deleteWorkAssignment(work.id)
+      );
+      await Promise.all(deletePromises);
+      
+      setMessage({ type: 'success', text: 'All work assignments deleted' });
+      setWorkHistory([]);
+      setShowWorkHistory(false);
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to delete work assignments' });
+      console.error('Error deleting all work:', error);
+    }
+  };
+
+  const filteredWorkHistory = workHistory.filter((work) =>
+    work.task_name.toLowerCase().includes(searchWork.toLowerCase())
+  );
+
   if (loading) {
     return (
       <div className="volunteers loading-container">
@@ -154,7 +223,7 @@ export function Volunteers() {
               if (showForm) handleCancel();
             }}
           >
-            {showForm ? '✕ Cancel' : '➕ Add Volunteer'}
+            {showForm ? <><X size={16} /> Cancel</> : <><Plus size={16} /> Add Volunteer</>}
           </button>
         </div>
       </div>
@@ -197,19 +266,6 @@ export function Volunteers() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="comment">Comment *</label>
-                <input
-                  id="comment"
-                  type="text"
-                  name="comment"
-                  value={formData.comment}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Team Lead, Event Organizer"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
                 <label htmlFor="place">Place</label>
                 <input
                   id="place"
@@ -217,107 +273,184 @@ export function Volunteers() {
                   name="place"
                   value={formData.place}
                   onChange={handleInputChange}
-                  placeholder="Enter location/place"
+                  placeholder="Enter place of residence or work"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="comment">Comment *</label>
+                <input
+                  id="comment"
+                  type="text"
+                  name="comment"
+                  value={formData.comment}
+                  onChange={handleInputChange}
+                  placeholder="Enter any additional information"
+                  required
                 />
               </div>
             </div>
 
             <div className="form-actions">
-              <button type="submit" className="btn btn-primary btn-lg">
-                {editingId ? '💾 Update Volunteer' : '✅ Add Volunteer'}
+              <button type="button" className="btn btn-secondary" onClick={handleCancel}>
+                <X size={16} /> Cancel
               </button>
-              <button
-                type="button"
-                className="btn btn-secondary btn-lg"
-                onClick={handleCancel}
-              >
-                Cancel
+              <button type="submit" className="btn btn-primary">
+                <Save size={16} /> {editingId ? 'Update' : 'Add'} Volunteer
               </button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="volunteers-grid">
-        {volunteers && volunteers.length > 0 ? (
-          <div className="grid grid-cols-3">
-            {volunteers.map((volunteer) => (
-              <div key={volunteer.id} className="volunteer-card card">
-                <div className="volunteer-header">
-                  <div className="header-content">
-                    <h3>{volunteer.name}</h3>
-                    <span className="role-badge">{volunteer.comment}</span>
-                  </div>
-                  <span className={`status-badge ${volunteer.is_active ? 'active' : 'inactive'}`}>
-                    {volunteer.is_active ? '✓ Active' : '✕ Inactive'}
-                  </span>
-                </div>
+      {/* Work History Section */}
+      {showWorkHistory && (
+        <div className="work-history-section card">
+          <div className="section-header">
+            <div>
+              <h2><ClipboardList size={24} style={{ display: 'inline', marginRight: '8px' }} /> Work History for {workFilter.volunteerName}</h2>
+              <p style={{ marginTop: '4px', color: '#999', fontSize: '0.9rem' }}>
+                Showing {filteredWorkHistory.length} work assignment{filteredWorkHistory.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {filteredWorkHistory.length > 0 && (
+                <button
+                  className="btn btn-danger"
+                  onClick={() => {
+                    if (confirm('Delete all work assignments for this volunteer? This cannot be undone.')) {
+                      handleDeleteAllWorkAssignments();
+                    }
+                  }}
+                  style={{ padding: '8px 16px' }}
+                  title="Delete all work assignments"
+                >
+                  <Trash2 size={16} /> Delete All
+                </button>
+              )}
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setShowWorkHistory(false);
+                  setWorkHistory([]);
+                  setSearchWork('');
+                }}
+                style={{ padding: '8px 16px' }}
+              >
+                <X size={16} /> Close
+              </button>
+            </div>
+          </div>
 
-                <div className="volunteer-info">
-                  <p>
-                    <strong>Email:</strong> {volunteer.email}
-                  </p>
-                  {volunteer.place && (
-                    <p>
-                      <strong>Place:</strong> {volunteer.place}
-                    </p>
-                  )}
-                  <p className="joined-date">
-                    📅 Joined {formatDate(volunteer.joined_date)}
-                  </p>
-                </div>
-
-                <div className="volunteer-actions">
-                  <button
-                    className={`btn ${volunteer.is_active ? 'btn-warning' : 'btn-success'} btn-sm`}
-                    onClick={() => handleToggleStatus(volunteer.id, volunteer.is_active)}
-                    disabled={togglingId === volunteer.id}
-                  >
-                    {togglingId === volunteer.id ? 'Updating...' : volunteer.is_active ? '🔒 Inactive' : '🔓 Active'}
-                  </button>
-                  <button
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => handleEdit(volunteer)}
-                  >
-                    ✏️ Edit
-                  </button>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => handleDelete(volunteer.id)}
-                  >
-                    🗑️ Remove
-                  </button>
-                </div>
+          {loadingWork ? (
+            <div className="loading-container">
+              <Loader size={32} className="animate-spin" />
+              <p>Loading work history...</p>
+            </div>
+          ) : filteredWorkHistory.length === 0 ? (
+            <div className="empty-state">
+              <ClipboardList size={40} />
+              <p>{searchWork ? 'No matching work assignments' : 'No work assignments yet'}</p>
+            </div>
+          ) : (
+            <>
+              <div className="work-filter">
+                <input
+                  type="text"
+                  placeholder="Search by task name..."
+                  value={searchWork}
+                  onChange={(e) => setSearchWork(e.target.value)}
+                  className="search-input"
+                  style={{ maxWidth: '300px' }}
+                />
               </div>
-            ))}
+
+              <div className="work-history-list">
+                {filteredWorkHistory.map((work) => (
+                  <VolunteerWorkRow
+                    key={work.id}
+                    work={work}
+                    onDelete={handleDeleteWorkAssignment}
+                    showEventName={true}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Volunteers Grid */}
+      <div className="volunteers-grid">
+        {volunteers && volunteers.length === 0 ? (
+          <div className="empty-state">
+            <p>No volunteers yet. Click "Add Volunteer" to get started.</p>
           </div>
         ) : (
-          <div className="empty-state">
-            <p>No volunteers registered yet</p>
-          </div>
-        )}
-      </div>
+          volunteers?.map((volunteer) => (
+            <div key={volunteer.id} className="volunteer-card card">
+              <div className="card-header">
+                <div className="volunteer-name-section">
+                  <h3>{volunteer.name}</h3>
+                  <span className={`status-badge ${volunteer.is_active ? 'active' : 'inactive'}`}>
+                    {volunteer.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                <button
+                  className={`btn btn-sm ${volunteer.is_active ? 'btn-warning' : 'btn-success'}`}
+                  onClick={() => handleToggleStatus(volunteer.id, volunteer.is_active)}
+                  disabled={togglingId === volunteer.id}
+                  title={volunteer.is_active ? 'Deactivate' : 'Activate'}
+                  style={{ padding: '4px 8px' }}
+                >
+                  {volunteer.is_active ? <Lock size={14} /> : <Unlock size={14} />}
+                </button>
+              </div>
 
-      <div className="stats-section card">
-        <h3>Volunteer Statistics</h3>
-        <div className="stat-grid">
-          <div className="stat-item">
-            <span className="label">Total Volunteers</span>
-            <span className="value">{volunteers?.length || 0}</span>
-          </div>
-          <div className="stat-item">
-            <span className="label">Active Volunteers</span>
-            <span className="value">{volunteers?.filter(v => v.is_active).length || 0}</span>
-          </div>
-          <div className="stat-item">
-            <span className="label">Inactive Volunteers</span>
-            <span className="value">{volunteers?.filter(v => !v.is_active).length || 0}</span>
-          </div>
-          <div className="stat-item">
-            <span className="label">Sorted By</span>
-            <span className="value">{sortBy === 'newest' ? 'Newest' : 'Oldest'}</span>
-          </div>
-        </div>
+              <div className="card-content">
+                <p className="volunteer-email">
+                  <span className="label">Email:</span> {volunteer.email}
+                </p>
+                {volunteer.place && (
+                  <p className="volunteer-place">
+                    <span className="label">Place:</span> {volunteer.place}
+                  </p>
+                )}
+                <p className="volunteer-comment">
+                  <span className="label">Comment:</span> {volunteer.comment}
+                </p>
+                <p className="volunteer-date">
+                  <Calendar size={14} style={{ display: 'inline', marginRight: '6px' }} />
+                  Joined: {formatDate(volunteer.joined_date)}
+                </p>
+              </div>
+
+              <div className="card-actions">
+                <button
+                  className="btn btn-sm btn-primary"
+                  onClick={() => handleViewWorkHistory(volunteer.id, volunteer.name)}
+                  style={{ padding: '6px 12px' }}
+                >
+                  <ClipboardList size={14} style={{ marginRight: '4px' }} /> Work History
+                </button>
+                <button
+                  className="btn btn-sm btn-secondary"
+                  onClick={() => handleEdit(volunteer)}
+                  style={{ padding: '6px 12px' }}
+                >
+                  <CheckCircle size={14} style={{ marginRight: '4px' }} /> Edit
+                </button>
+                <button
+                  className="btn btn-sm btn-danger"
+                  onClick={() => handleDelete(volunteer.id)}
+                  style={{ padding: '6px 12px' }}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

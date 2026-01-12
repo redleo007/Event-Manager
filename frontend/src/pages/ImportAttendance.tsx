@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { Trash2, Loader, CheckCircle, AlertTriangle, Check } from 'lucide-react';
 import Papa from 'papaparse';
-import { participantsAPI, attendanceAPI, eventsAPI, importsAPI } from '../api/client';
+import { participantsAPI, attendanceAPI, eventsAPI, importsAPI, volunteersAPI } from '../api/client';
 import { useAsync } from '../utils/hooks';
 import './ImportAttendance.css';
 
@@ -45,7 +46,7 @@ interface AttendanceRecord {
 }
 
 export function ImportAttendance() {
-  const [activeTab, setActiveTab] = useState<'participants' | 'attendance' | 'history' | 'delete'>('participants');
+  const [activeTab, setActiveTab] = useState<'participants' | 'attendance' | 'volunteer_attendance' | 'delete'>('participants');
   
   // Participants import state
   const [selectedEventParticipants, setSelectedEventParticipants] = useState<string>('');
@@ -58,6 +59,12 @@ export function ImportAttendance() {
   const [attendanceFileData, setAttendanceFileData] = useState<ParsedAttendance[]>([]);
   const [attendanceMessage, setAttendanceMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [importingAttendance, setImportingAttendance] = useState(false);
+
+  // Volunteer attendance import state
+  const [selectedEventVolunteerAttendance, setSelectedEventVolunteerAttendance] = useState<string>('');
+  const [volunteerAttendanceFileData, setVolunteerAttendanceFileData] = useState<ParsedAttendance[]>([]);
+  const [volunteerAttendanceMessage, setVolunteerAttendanceMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [importingVolunteerAttendance, setImportingVolunteerAttendance] = useState(false);
 
   // Delete state
   const [selectedEventDelete, setSelectedEventDelete] = useState<string>('');
@@ -209,6 +216,25 @@ export function ImportAttendance() {
       },
       error: (error) => {
         setAttendanceMessage({ type: 'error', text: `CSV parsing error: ${error.message || 'Unknown error'}` });
+      },
+    });
+  };
+
+  // Volunteer attendance file handler
+  const handleVolunteerAttendanceFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const mappedData = (results.data as any[]).map(mapAttendanceColumns);
+        setVolunteerAttendanceFileData(mappedData);
+        setVolunteerAttendanceMessage(null);
+      },
+      error: (error) => {
+        setVolunteerAttendanceMessage({ type: 'error', text: `CSV parsing error: ${error.message || 'Unknown error'}` });
       },
     });
   };
@@ -605,6 +631,66 @@ export function ImportAttendance() {
     }
   };
 
+  const handleImportVolunteerAttendance = async () => {
+    if (volunteerAttendanceFileData.length === 0) {
+      setVolunteerAttendanceMessage({ type: 'error', text: 'No data to import. Please select a CSV file.' });
+      return;
+    }
+
+    if (!selectedEventVolunteerAttendance) {
+      setVolunteerAttendanceMessage({ type: 'error', text: 'Please select an event before importing volunteer attendance.' });
+      return;
+    }
+
+    const invalidRows = volunteerAttendanceFileData.filter((row) => !isValidAttendanceRow(row));
+    if (invalidRows.length > 0) {
+      const missingFields = invalidRows.map(row => {
+        const issues = [];
+        if (!row.name || !row.name.trim()) issues.push('missing name');
+        if (!row.email || !row.email.trim()) issues.push('missing email');
+        if (row.email && !row.email.includes('@')) issues.push('invalid email format');
+        return `"${row.name || 'N/A'}" - ${issues.join(', ')}`;
+      });
+      setVolunteerAttendanceMessage({
+        type: 'error',
+        text: `Cannot import: ${invalidRows.length} rows are invalid:\n${missingFields.slice(0, 3).join('\n')}${invalidRows.length > 3 ? `\n... and ${invalidRows.length - 3} more` : ''}`,
+      });
+      return;
+    }
+
+    setImportingVolunteerAttendance(true);
+
+    try {
+      // Send all volunteer attendance records in one bulk request
+      const response = await volunteersAPI.bulkImportAttendance({
+        records: volunteerAttendanceFileData.map(row => ({
+          name: row.name.trim(),
+          email: row.email.trim(),
+          event_id: selectedEventVolunteerAttendance,
+          attendance_status: normalizeStatus(row.status),
+        })),
+      });
+      
+      // Suppress unused variable warning - response contains session data
+      void response;
+
+      setVolunteerAttendanceMessage({
+        type: 'success',
+        text: `Import completed successfully! ${volunteerAttendanceFileData.length} volunteer attendance records imported.`,
+      });
+
+      setVolunteerAttendanceFileData([]);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      setVolunteerAttendanceMessage({
+        type: 'error',
+        text: `Import failed: ${errorMsg}`,
+      });
+    } finally {
+      setImportingVolunteerAttendance(false);
+    }
+  };
+
   return (
     <div className="import-attendance">
       <div className="page-header">
@@ -625,6 +711,12 @@ export function ImportAttendance() {
             onClick={() => setActiveTab('attendance')}
           >
             Import Attendance
+          </button>
+          <button
+            className={`tab-button ${activeTab === 'volunteer_attendance' ? 'active' : ''}`}
+            onClick={() => setActiveTab('volunteer_attendance')}
+          >
+            Import Volunteer Attendance
           </button>
           <button
             className={`tab-button ${activeTab === 'history' ? 'active' : ''}`}
@@ -686,13 +778,13 @@ export function ImportAttendance() {
               </label>
               {participantFileData.length > 0 && (
                 <div className="file-info">
-                  <span>✓ File loaded: {participantFileData.length} rows</span>
+                  <span><Check size={16} /> File loaded: {participantFileData.length} rows</span>
                   <button
                     type="button"
                     className="btn btn-sm btn-danger"
                     onClick={() => setParticipantFileData([])}
                   >
-                    🗑️ Delete File
+                    <Trash2 size={16} /> Delete File
                   </button>
                 </div>
               )}
@@ -709,7 +801,7 @@ export function ImportAttendance() {
                       onClick={() => setParticipantFileData([])}
                       title="Delete and remove this file from preview"
                     >
-                      🗑️ Delete Preview
+                      <Trash2 size={16} /> Delete Preview
                     </button>
                   </div>
                   <div className="table-wrapper">
@@ -741,7 +833,7 @@ export function ImportAttendance() {
                     onClick={handleImportParticipants}
                     disabled={importingParticipants}
                   >
-                    {importingParticipants ? '⏳ Importing...' : '✅ Import Participants'}
+                    {importingParticipants ? <><Loader size={16} /> Importing...</> : <><CheckCircle size={16} /> Import Participants</>}
                   </button>
                   <button
                     className="btn btn-secondary btn-lg"
@@ -802,13 +894,13 @@ export function ImportAttendance() {
               </label>
               {attendanceFileData.length > 0 && (
                 <div className="file-info">
-                  <span>✓ File loaded: {attendanceFileData.length} rows</span>
+                  <span><Check size={16} /> File loaded: {attendanceFileData.length} rows</span>
                   <button
                     type="button"
                     className="btn btn-sm btn-danger"
                     onClick={() => setAttendanceFileData([])}
                   >
-                    🗑️ Delete File
+                    <Trash2 size={16} /> Delete File
                   </button>
                 </div>
               )}
@@ -825,7 +917,7 @@ export function ImportAttendance() {
                       onClick={() => setAttendanceFileData([])}
                       title="Delete and remove this file from preview"
                     >
-                      🗑️ Delete Preview
+                      <Trash2 size={16} /> Delete Preview
                     </button>
                   </div>
                   <div className="table-wrapper">
@@ -867,12 +959,109 @@ export function ImportAttendance() {
                     onClick={handleImportAttendance}
                     disabled={importingAttendance}
                   >
-                    {importingAttendance ? '⏳ Importing...' : '✅ Import Attendance'}
+                    {importingAttendance ? <><Loader size={16} /> Importing...</> : <><CheckCircle size={16} /> Import Attendance</>}
                   </button>
                   <button
                     className="btn btn-secondary btn-lg"
                     onClick={() => setAttendanceFileData([])}
                     disabled={importingAttendance}
+                  >
+                    Clear
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Volunteer Attendance Tab */}
+      {activeTab === 'volunteer_attendance' && (
+        <div className="tab-content card">
+          {volunteerAttendanceMessage && (
+            <div className={`alert alert-${volunteerAttendanceMessage.type}`}>
+              {volunteerAttendanceMessage.text}
+            </div>
+          )}
+
+          <div className="import-section">
+            <div className="section-header">
+              <h2>Import Volunteer Attendance</h2>
+              <p>Upload a CSV file with volunteer attendance data (name, email, status)</p>
+            </div>
+
+            {/* Event Selector */}
+            <div className="event-selector">
+              <label htmlFor="volunteer-attendance-event-select">Select Event *</label>
+              <select
+                id="volunteer-attendance-event-select"
+                value={selectedEventVolunteerAttendance}
+                onChange={(e) => setSelectedEventVolunteerAttendance(e.target.value)}
+              >
+                <option value="">-- Choose an event --</option>
+                {events && events.map((event) => (
+                  <option key={event.id} value={event.id}>
+                    {event.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* File Upload */}
+            <div className="file-upload-section">
+              <div className="file-input-wrapper">
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleVolunteerAttendanceFileSelect}
+                  id="volunteer-attendance-file"
+                  disabled={importingVolunteerAttendance}
+                />
+                <label htmlFor="volunteer-attendance-file" className="file-label">
+                  Choose CSV File
+                </label>
+              </div>
+              <p className="file-hint">
+                CSV format: name, email, status (optional: attended, not attended, no-show)
+              </p>
+            </div>
+
+            {/* Data Preview and Import */}
+            {volunteerAttendanceFileData.length > 0 && (
+              <>
+                <div className="data-preview">
+                  <h3>Preview ({volunteerAttendanceFileData.length} rows)</h3>
+                  <div className="preview-table">
+                    {volunteerAttendanceFileData.slice(0, 5).map((row, idx) => (
+                      <div key={idx} className="preview-row">
+                        <strong>{row.name}</strong>
+                        {' '}
+                        <span className="text-muted">({row.email})</span>
+                        {row.status && (
+                          <span className={`status-badge ${getStatusBadgeColor(normalizeStatus(row.status))}`}>
+                            {getStatusLabel(normalizeStatus(row.status))}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  {volunteerAttendanceFileData.length > 5 && (
+                    <p className="text-muted">... and {volunteerAttendanceFileData.length - 5} more rows</p>
+                  )}
+                </div>
+
+                <div className="import-actions">
+                  <button
+                    className="btn btn-primary btn-lg"
+                    onClick={handleImportVolunteerAttendance}
+                    disabled={importingVolunteerAttendance}
+                  >
+                    {importingVolunteerAttendance ? <><Loader size={16} /> Importing...</> : <><CheckCircle size={16} /> Import Volunteer Attendance</>}
+                  </button>
+                  <button
+                    className="btn btn-secondary btn-lg"
+                    onClick={() => setVolunteerAttendanceFileData([])}
+                    disabled={importingVolunteerAttendance}
                   >
                     Clear
                   </button>
@@ -995,7 +1184,7 @@ export function ImportAttendance() {
             </div>
             
             <div className="modal-warning">
-              <strong>⚠️ Warning:</strong> This action will permanently remove all {deleteImportConfirmation.importType === 'participants' ? 'participants and their associated' : ''} {deleteImportConfirmation.importType === 'participants' ? 'attendance records' : 'attendance data'} from this import. 
+              <strong><AlertTriangle size={16} style={{ display: 'inline', marginRight: '8px' }} /> Warning:</strong> This action will permanently remove all {deleteImportConfirmation.importType === 'participants' ? 'participants and their associated' : ''} {deleteImportConfirmation.importType === 'participants' ? 'attendance records' : 'attendance data'} from this import. 
               {deleteImportConfirmation.importType === 'attendance' && ' Previous attendance states will be restored.'}
               <br /><br />
               <strong>This action cannot be undone.</strong>
@@ -1171,7 +1360,7 @@ export function ImportAttendance() {
             </div>
             <div className="modal-body">
               <p className="warning-message">
-                ⚠️ You are about to permanently delete {deleteConfirmation.count} {deleteConfirmation.type === 'participant' ? 'participant(s)' : 'attendance record(s)'}. 
+                <AlertTriangle size={16} style={{ display: 'inline', marginRight: '8px' }} /> You are about to permanently delete {deleteConfirmation.count} {deleteConfirmation.type === 'participant' ? 'participant(s)' : 'attendance record(s)'}. 
                 {deleteConfirmation.type === 'participant' && ' This will also delete all associated attendance records. '}
                 This action cannot be undone.
               </p>

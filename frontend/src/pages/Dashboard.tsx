@@ -1,5 +1,17 @@
 import { useEffect, useState } from 'react';
+import {
+  Calendar,
+  Users,
+  AlertCircle,
+  Ban,
+  UserCog,
+  BarChart3,
+  CheckCircle,
+  RefreshCcw,
+  Settings,
+} from 'lucide-react';
 import { dashboardAPI, eventsAPI, participantsAPI, volunteersAPI, blocklistAPI, attendanceAPI } from '../api/client';
+import { AttendanceStatusBadge } from '../components/AttendanceStatusBadge';
 import { useAsync } from '../utils/hooks';
 import { formatDateTime, formatDate } from '../utils/formatters';
 import './Dashboard.css';
@@ -36,8 +48,9 @@ interface AttendanceRecord {
 }
 
 export function Dashboard() {
-  const [latestEventAttendance, setLatestEventAttendance] = useState<any[]>([]);
   const [latestEventStats, setLatestEventStats] = useState<any>(null);
+  const [volunteerAttendance, setVolunteerAttendance] = useState<any[]>([]);
+  const [loadingAttendance, setLoadingAttendance] = useState(false);
 
   const { data: stats, loading, error, refetch } = useAsync<DashboardStats>(
     () => dashboardAPI.getStats().then((res) => res.data),
@@ -64,6 +77,27 @@ export function Dashboard() {
     true
   );
 
+  // Load volunteer attendance overview
+  useEffect(() => {
+    if (!volunteers || volunteers.length === 0) return;
+
+    const loadVolunteerAttendance = async () => {
+      setLoadingAttendance(true);
+      try {
+        // Volunteer attendance data is loaded from events when attendance is imported
+        // This section can be extended to show volunteer activity
+        setVolunteerAttendance([]);
+      } catch (error) {
+        console.error('Failed to load volunteer attendance:', error);
+        setVolunteerAttendance([]);
+      } finally {
+        setLoadingAttendance(false);
+      }
+    };
+
+    loadVolunteerAttendance();
+  }, [volunteers]);
+
   // Load latest event attendance
   useEffect(() => {
     const loadLatestEventAttendance = async () => {
@@ -83,7 +117,6 @@ export function Dashboard() {
         const attended = records.filter((r: AttendanceRecord) => r.status === 'attended').length;
         const noShow = records.filter((r: AttendanceRecord) => r.status === 'no_show').length;
 
-        setLatestEventAttendance(records);
         setLatestEventStats({
           event: latestEvent,
           total: records.length,
@@ -126,20 +159,20 @@ export function Dashboard() {
     );
   }
 
-  const getActivityIcon = (type: string): string => {
+  const getActivityIcon = (type: string): React.ReactNode => {
     switch (type) {
       case 'event_created':
-        return '📅';
+        return <Calendar size={18} />;
       case 'event_updated':
-        return '✏️';
+        return <Calendar size={18} />;
       case 'attendance_marked':
-        return '✅';
+        return <CheckCircle size={18} />;
       case 'participant_auto_blocked':
-        return '🚫';
+        return <Ban size={18} />;
       case 'participant_unblocked':
-        return '🔓';
+        return <Users size={18} />;
       default:
-        return '📝';
+        return <BarChart3 size={18} />;
     }
   };
 
@@ -157,14 +190,15 @@ export function Dashboard() {
           <p>Real-time system overview and activity tracking</p>
         </div>
         <button className="btn btn-secondary btn-sm" onClick={refetch}>
-          🔄 Refresh
+          <RefreshCcw size={16} />
+          Refresh
         </button>
       </div>
 
       {/* Primary Stats */}
       <div className="stats-grid">
         <div className="stat-card stat-card-cyan">
-          <div className="stat-icon">📅</div>
+          <div className="stat-icon"><Calendar size={24} /></div>
           <div className="stat-content">
             <h3>Events</h3>
             <p className="stat-value">{stats?.totalEvents || 0}</p>
@@ -173,7 +207,7 @@ export function Dashboard() {
         </div>
 
         <div className="stat-card stat-card-lime">
-          <div className="stat-icon">👥</div>
+          <div className="stat-icon"><Users size={24} /></div>
           <div className="stat-content">
             <h3>Participants</h3>
             <p className="stat-value">{activeParticipants}</p>
@@ -182,7 +216,7 @@ export function Dashboard() {
         </div>
 
         <div className="stat-card stat-card-magenta">
-          <div className="stat-icon">❌</div>
+          <div className="stat-icon"><AlertCircle size={24} /></div>
           <div className="stat-content">
             <h3>No-Shows</h3>
             <p className="stat-value">{stats?.noShows || 0}</p>
@@ -191,7 +225,7 @@ export function Dashboard() {
         </div>
 
         <div className="stat-card stat-card-purple">
-          <div className="stat-icon">🚫</div>
+          <div className="stat-icon"><Ban size={24} /></div>
           <div className="stat-content">
             <h3>Blocklisted</h3>
             <p className="stat-value">{stats?.blocklistedParticipants || 0}</p>
@@ -200,7 +234,7 @@ export function Dashboard() {
         </div>
 
         <div className="stat-card stat-card-volunteer">
-          <div className="stat-icon">👤</div>
+          <div className="stat-icon"><UserCog size={24} /></div>
           <div className="stat-content">
             <h3>Volunteers</h3>
             <p className="stat-value">{volunteers?.length || 0}</p>
@@ -221,7 +255,7 @@ export function Dashboard() {
 
           <div className="event-stats-grid">
             <div className="event-stat-card">
-              <div className="event-stat-icon">📅</div>
+              <div className="event-stat-icon"><Calendar size={20} /></div>
               <div className="event-stat-content">
                 <span className="label">Date</span>
                 <span className="value">{formatDate(latestEventStats.event.date)}</span>
@@ -229,7 +263,7 @@ export function Dashboard() {
             </div>
 
             <div className="event-stat-card">
-              <div className="event-stat-icon">👥</div>
+              <div className="event-stat-icon"><Users size={20} /></div>
               <div className="event-stat-content">
                 <span className="label">Total Registered</span>
                 <span className="value">{latestEventStats.total}</span>
@@ -237,7 +271,7 @@ export function Dashboard() {
             </div>
 
             <div className="event-stat-card success">
-              <div className="event-stat-icon">✅</div>
+              <div className="event-stat-icon"><CheckCircle size={20} /></div>
               <div className="event-stat-content">
                 <span className="label">Attended</span>
                 <span className="value">{latestEventStats.attended}</span>
@@ -245,7 +279,7 @@ export function Dashboard() {
             </div>
 
             <div className="event-stat-card danger">
-              <div className="event-stat-icon">❌</div>
+              <div className="event-stat-icon"><AlertCircle size={20} /></div>
               <div className="event-stat-content">
                 <span className="label">No-Shows</span>
                 <span className="value">{latestEventStats.noShow}</span>
@@ -253,39 +287,12 @@ export function Dashboard() {
             </div>
 
             <div className="event-stat-card">
-              <div className="event-stat-icon">📊</div>
+              <div className="event-stat-icon"><BarChart3 size={20} /></div>
               <div className="event-stat-content">
                 <span className="label">Attendance Rate</span>
                 <span className="value">{latestEventStats.rate}%</span>
               </div>
             </div>
-          </div>
-
-          {/* Latest Event Participants */}
-          <div className="participants-overview">
-            <h3>Participant Breakdown</h3>
-            {latestEventAttendance.length > 0 ? (
-              <div className="participants-grid">
-                {latestEventAttendance
-                  .sort((a, b) => {
-                    if (a.status === b.status) return 0;
-                    return a.status === 'attended' ? -1 : 1;
-                  })
-                  .map((record, index) => {
-                    const participant = participants?.find(p => p.id === record.participant_id);
-                    return (
-                      <div key={index} className={`participant-badge ${record.status}`}>
-                        <span className="badge-icon">
-                          {record.status === 'attended' ? '✅' : '❌'}
-                        </span>
-                        <span className="badge-name">{participant?.name || 'Unknown'}</span>
-                      </div>
-                    );
-                  })}
-              </div>
-            ) : (
-              <p className="empty-text">No attendance records for this event</p>
-            )}
           </div>
         </div>
       )}
@@ -295,7 +302,8 @@ export function Dashboard() {
         <div className="section-header">
           <h2>Recent Activity</h2>
           <button className="btn btn-secondary btn-sm" onClick={refetch}>
-            🔄 Refresh
+            <RefreshCcw size={16} />
+            Refresh
           </button>
         </div>
 
@@ -321,54 +329,112 @@ export function Dashboard() {
         )}
       </div>
 
+      {/* Volunteer Attendance Overview */}
+      <div className="volunteer-attendance-section card">
+        <div className="section-header">
+          <h2>Volunteer Attendance Overview</h2>
+          <button className="btn btn-secondary btn-sm" onClick={() => setVolunteerAttendance([])}>
+            <RefreshCcw size={16} />
+            Refresh
+          </button>
+        </div>
+
+        {loadingAttendance ? (
+          <div className="loading-container">
+            <div className="spinner"></div>
+            <p>Loading attendance data...</p>
+          </div>
+        ) : volunteerAttendance.length > 0 ? (
+          <div className="volunteer-attendance-list">
+            {volunteerAttendance.map(({ volunteer, attendance }) => (
+              <div key={volunteer.id} className="volunteer-attendance-item">
+                <h3>{volunteer.name}</h3>
+                {attendance && attendance.length > 0 ? (
+                  <div className="attendance-group">
+                    {attendance.map((record: any) => (
+                      <div key={record.id} className="attendance-record" style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '8px 0',
+                        borderBottom: '1px solid #eee'
+                      }}>
+                        <div>
+                          <p style={{ fontSize: '0.9rem', marginBottom: '4px' }}>
+                            {record.event_name || 'Unknown Event'}
+                          </p>
+                          <p style={{ fontSize: '0.8rem', color: '#999' }}>
+                            {formatDate(record.date || record.created_at)}
+                          </p>
+                        </div>
+                        <AttendanceStatusBadge 
+                          status={record.status === 'attended' ? 'attended' : 'no_show'} 
+                          size="sm"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ color: '#999', fontSize: '0.9rem' }}>No recent attendance records</p>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">
+            <p>No volunteer attendance data available</p>
+          </div>
+        )}
+      </div>
+
       {/* Quick Links */}
       <div className="quick-actions">
         <h2>Quick Actions</h2>
         <div className="actions-grid">
           <a href="/events" className="action-card">
-            <div className="action-icon">📅</div>
+            <div className="action-icon"><Calendar size={24} /></div>
             <div className="action-text">
               <h4>Manage Events</h4>
               <p>{events?.length || 0} events</p>
             </div>
           </a>
           <a href="/events-history" className="action-card">
-            <div className="action-icon">📜</div>
+            <div className="action-icon"><BarChart3 size={24} /></div>
             <div className="action-text">
               <h4>Events History</h4>
               <p>View event details</p>
             </div>
           </a>
           <a href="/import" className="action-card">
-            <div className="action-icon">📥</div>
+            <div className="action-icon"><RefreshCcw size={24} /></div>
             <div className="action-text">
               <h4>Import Data</h4>
               <p>Participants & Attendance</p>
             </div>
           </a>
           <a href="/no-shows" className="action-card">
-            <div className="action-icon">❌</div>
+            <div className="action-icon"><AlertCircle size={24} /></div>
             <div className="action-text">
               <h4>No-Shows</h4>
               <p>{stats?.noShows || 0} records</p>
             </div>
           </a>
           <a href="/blocklist" className="action-card">
-            <div className="action-icon">🚫</div>
+            <div className="action-icon"><Ban size={24} /></div>
             <div className="action-text">
               <h4>Blocklist</h4>
               <p>{stats?.blocklistedParticipants || 0} users</p>
             </div>
           </a>
           <a href="/volunteers" className="action-card">
-            <div className="action-icon">👤</div>
+            <div className="action-icon"><UserCog size={24} /></div>
             <div className="action-text">
               <h4>Volunteers</h4>
               <p>{volunteers?.length || 0} registered</p>
             </div>
           </a>
           <a href="/settings" className="action-card">
-            <div className="action-icon">⚙️</div>
+            <div className="action-icon"><Settings size={24} /></div>
             <div className="action-text">
               <h4>Settings</h4>
               <p>System configuration</p>

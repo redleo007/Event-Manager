@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Ban, Unlock } from 'lucide-react';
 import { blocklistAPI, participantsAPI } from '../api/client';
 import { useAsync } from '../utils/hooks';
 import { formatDate } from '../utils/formatters';
@@ -89,7 +90,7 @@ export function Blocklist() {
 
       <div className="blocklist-stat">
         <div className="stat-card stat-card-danger">
-          <div className="stat-icon">🚫</div>
+          <div className="stat-icon"><Ban size={40} /></div>
           <div className="stat-content">
             <h3>Blocklisted Participants</h3>
             <p className="stat-value">{blocklistedCount}</p>
@@ -109,7 +110,7 @@ export function Blocklist() {
                       <h3>{entry.participants?.name || 'Unknown'}</h3>
                       <p className="email">{entry.participants?.email}</p>
                     </div>
-                    <span className="badge badge-danger">🚫 Blocked</span>
+                    <span className="badge badge-danger"><Ban size={16} /> Blocked</span>
                   </div>
 
                   <div className="item-details">
@@ -126,7 +127,7 @@ export function Blocklist() {
                       className="btn btn-success btn-sm"
                       onClick={() => handleRemoveFromBlocklist(entry.participant_id)}
                     >
-                      🔓 Unblock
+                      <Unlock size={16} /> Unblock
                     </button>
                   </div>
                 </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Loader, Save, Check, X, AlertTriangle } from 'lucide-react';
 import { settingsAPI } from '../api/client';
 import './Settings.css';
 
@@ -146,7 +147,7 @@ export function Settings() {
 
             <div className="form-actions">
               <button type="submit" className="btn btn-primary btn-lg" disabled={saving}>
-                {saving ? '⏳ Saving...' : '💾 Save Settings'}
+                {saving ? <><Loader size={18} /> Saving...</> : <><Save size={18} /> Save Settings</>}
               </button>
               <button
                 type="button"
@@ -173,7 +174,7 @@ export function Settings() {
               <li>
                 <span className="label">Auto-Block Status:</span>
                 <span className={`badge ${formData.auto_block_enabled ? 'badge-success' : 'badge-danger'}`}>
-                  {formData.auto_block_enabled ? '✓ Enabled' : '✗ Disabled'}
+                  {formData.auto_block_enabled ? <><Check size={14} /> Enabled</> : <><X size={14} /> Disabled</>}
                 </span>
               </li>
             </ul>
@@ -200,7 +201,7 @@ export function Settings() {
           </div>
 
           <div className="info-section warning-section">
-            <h3>⚠️ Important Notes</h3>
+            <h3><AlertTriangle size={20} style={{ display: 'inline', marginRight: '8px' }} /> Important Notes</h3>
             <ul className="notes-list">
               <li>Changes to settings apply immediately to all future attendance records.</li>
               <li>Changing the no-show limit does not retroactively affect already-blocklisted

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { X, Plus, Save, CheckCircle, Calendar, MapPin, Edit, Trash2 } from 'lucide-react';
 import { eventsAPI } from '../api/client';
 import { useAsync } from '../utils/hooks';
 import { formatDate } from '../utils/formatters';
@@ -118,7 +119,7 @@ export function Events() {
             if (showForm) handleCancel();
           }}
         >
-          {showForm ? '✕ Cancel' : '➕ New Event'}
+          {showForm ? <><X size={16} /> Cancel</> : <><Plus size={16} /> New Event</>}
         </button>
       </div>
 
@@ -182,7 +183,7 @@ export function Events() {
 
             <div className="form-actions">
               <button type="submit" className="btn btn-primary btn-lg">
-                {editingId ? '💾 Update Event' : '✅ Create Event'}
+                {editingId ? <><Save size={18} /> Update Event</> : <><CheckCircle size={18} /> Create Event</>}
               </button>
               <button
                 type="button"
@@ -203,11 +204,11 @@ export function Events() {
               <div key={event.id} className="event-card card">
                 <div className="event-header">
                   <h3>{event.name}</h3>
-                  <span className="event-date">📅 {formatDate(event.date)}</span>
+                  <span className="event-date"><Calendar size={16} style={{ display: 'inline', marginRight: '4px' }} /> {formatDate(event.date)}</span>
                 </div>
 
                 {event.location && (
-                  <p className="event-location">📍 {event.location}</p>
+                  <p className="event-location"><MapPin size={16} style={{ display: 'inline', marginRight: '4px' }} /> {event.location}</p>
                 )}
 
                 {event.description && (
@@ -219,13 +220,13 @@ export function Events() {
                     className="btn btn-secondary btn-sm"
                     onClick={() => handleEdit(event)}
                   >
-                    ✏️ Edit
+                    <Edit size={16} /> Edit
                   </button>
                   <button
                     className="btn btn-danger btn-sm"
                     onClick={() => handleDelete(event.id)}
                   >
-                    🗑️ Delete
+                    <Trash2 size={16} /> Delete
                   </button>
                 </div>
               </div>

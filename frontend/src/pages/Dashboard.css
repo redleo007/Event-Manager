@@ -96,8 +96,12 @@
 }
 
 .stat-icon {
-  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-width: 50px;
+  color: currentColor;
+}
   text-align: center;
 }
 
@@ -212,9 +216,11 @@
 }
 
 .event-stat-icon {
-  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-width: 30px;
-  text-align: center;
+  color: currentColor;
 }
 
 .event-stat-content {
@@ -371,9 +377,11 @@
 }
 
 .activity-icon {
-  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-width: 40px;
-  text-align: center;
+  color: var(--neon-cyan);
 }
 
 .activity-content h4 {
@@ -437,9 +445,11 @@
 }
 
 .action-icon {
-  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-width: 50px;
-  text-align: center;
+  color: var(--neon-cyan);
 }
 
 .action-text h4 {
@@ -466,7 +476,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 60vh;
+  min-height: auto;
+  padding: 60px 20px;
   gap: 20px;
 }
 
@@ -532,4 +543,41 @@
   }
 }
 
+/* Volunteer Attendance Section */
+.volunteer-attendance-section {
+  margin-top: 20px;
+}
 
+.volunteer-attendance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.volunteer-attendance-item {
+  padding: 16px;
+  background: var(--card-bg);
+  border-radius: 8px;
+  border-left: 4px solid var(--primary-color);
+}
+
+.volunteer-attendance-item h3 {
+  margin: 0 0 12px 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.attendance-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attendance-record {
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
