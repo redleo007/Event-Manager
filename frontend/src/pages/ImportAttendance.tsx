@@ -46,7 +46,7 @@ interface AttendanceRecord {
 }
 
 export function ImportAttendance() {
-  const [activeTab, setActiveTab] = useState<'participants' | 'attendance' | 'volunteer_attendance' | 'delete'>('participants');
+  const [activeTab, setActiveTab] = useState<'participants' | 'attendance' | 'volunteer_attendance' | 'history' | 'delete'>('participants');
   
   // Participants import state
   const [selectedEventParticipants, setSelectedEventParticipants] = useState<string>('');
