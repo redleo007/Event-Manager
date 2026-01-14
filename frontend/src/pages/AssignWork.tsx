@@ -319,7 +319,7 @@ export function AssignWork() {
               <Loader size={32} className="animate-spin" style={{ margin: '0 auto' }} />
               <p>Loading work history...</p>
             </div>
-          ) : workHistory.length === 0 ? (
+          ) : (workHistory ?? []).length === 0 ? (
             <div className="empty-state-inline">
               <p>No work assignments yet. Click "Assign Work" above to get started.</p>
             </div>
@@ -335,7 +335,7 @@ export function AssignWork() {
                   </tr>
                 </thead>
                 <tbody>
-                  {workHistory.map((work) => (
+                  {(workHistory ?? []).map((work) => (
                     <tr key={work.id}>
                       <td>{work.task_name}</td>
                       <td>
