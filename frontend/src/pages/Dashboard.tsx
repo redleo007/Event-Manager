@@ -43,6 +43,10 @@ interface AttendanceRecord {
 export function Dashboard() {
   const [latestEventStats, setLatestEventStats] = useState<any>(null);
 
+  useEffect(() => {
+    document.title = 'Dashboard - TechNexus Community';
+  }, []);
+
   const { data: stats, loading, error, refetch } = useAsync<DashboardStats>(
     () => dashboardAPI.getStats().then((res) => res.data),
     true

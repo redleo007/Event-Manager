@@ -19,6 +19,10 @@ export function Settings() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    document.title = 'Settings - TechNexus Community';
+  }, []);
+
+  useEffect(() => {
     const loadSettings = async () => {
       setLoading(true);
       try {

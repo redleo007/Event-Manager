@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Trash2, Loader, CheckCircle, AlertTriangle, Check } from 'lucide-react';
 import Papa from 'papaparse';
 import { participantsAPI, attendanceAPI, eventsAPI } from '../api/client';
@@ -38,6 +38,10 @@ interface AttendanceRecord {
 
 export function ImportAttendance() {
   const [activeTab, setActiveTab] = useState<'participants' | 'attendance' | 'delete'>('participants');
+  
+  useEffect(() => {
+    document.title = 'Import Data - TechNexus Community';
+  }, []);
   
   // Participants import state
   const [selectedEventParticipants, setSelectedEventParticipants] = useState<string>('');

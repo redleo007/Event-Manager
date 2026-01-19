@@ -35,6 +35,10 @@ export function NoShows() {
   const [loading, setLoading] = useState(true);
   const [blocklistData, setBlocklistData] = useState<any[]>([]);
 
+  useEffect(() => {
+    document.title = 'No Shows - TechNexus Community';
+  }, []);
+
   const { data: events } = useAsync<Event[]>(
     () => eventsAPI.getAll().then((res) => res.data),
     true

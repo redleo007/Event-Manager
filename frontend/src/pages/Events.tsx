@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Plus, Save, CheckCircle, Calendar, MapPin, Edit, Trash2 } from 'lucide-react';
 import { eventsAPI } from '../api/client';
 import { useAsync } from '../utils/hooks';
@@ -17,6 +17,10 @@ interface Event {
 export function Events() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  
+  useEffect(() => {
+    document.title = 'Events - TechNexus Community';
+  }, []);
   const [formData, setFormData] = useState({
     name: '',
     date: '',

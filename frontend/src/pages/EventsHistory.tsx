@@ -41,6 +41,10 @@ export function EventsHistory() {
   const [searchTerm, setSearchTerm] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  useEffect(() => {
+    document.title = 'Events History - TechNexus Community';
+  }, []);
+
   const { data: events, loading } = useAsync<Event[]>(
     () => eventsAPI.getAll().then((res) => res.data),
     true

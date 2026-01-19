@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Ban, Unlock } from 'lucide-react';
 import { blocklistAPI, participantsAPI } from '../api/client';
 import { useAsync } from '../utils/hooks';
@@ -27,6 +27,10 @@ export function Blocklist() {
   const [blocklistData, setBlocklistData] = useState<BlocklistEntry[]>([]);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    document.title = 'Blocklist - TechNexus Community';
+  }, []);
 
   const { data: participants, refetch: refetchParticipants } = useAsync<Participant[]>(
     () => participantsAPI.getAll(true).then((res) => res.data),
