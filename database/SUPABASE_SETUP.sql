@@ -53,22 +53,6 @@ CREATE TABLE IF NOT EXISTS blocklist (
 
 CREATE INDEX idx_blocklist_participant ON blocklist(participant_id);
 
--- Volunteers Table
-CREATE TABLE IF NOT EXISTS volunteers (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  email TEXT NOT NULL UNIQUE,
-  comment TEXT NOT NULL,
-  place TEXT,
-  is_active BOOLEAN DEFAULT TRUE,
-  joined_date TIMESTAMP NOT NULL,
-  created_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE INDEX idx_volunteers_email ON volunteers(email);
-CREATE INDEX idx_volunteers_joined_date ON volunteers(joined_date DESC);
-CREATE INDEX idx_volunteers_is_active ON volunteers(is_active);
-
 -- Settings Table
 CREATE TABLE IF NOT EXISTS settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -97,7 +81,6 @@ ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE blocklist ENABLE ROW LEVEL SECURITY;
-ALTER TABLE volunteers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
 
@@ -107,7 +90,6 @@ CREATE POLICY "Allow all authenticated users" ON events FOR ALL USING (true);
 CREATE POLICY "Allow all authenticated users" ON participants FOR ALL USING (true);
 CREATE POLICY "Allow all authenticated users" ON attendance FOR ALL USING (true);
 CREATE POLICY "Allow all authenticated users" ON blocklist FOR ALL USING (true);
-CREATE POLICY "Allow all authenticated users" ON volunteers FOR ALL USING (true);
 CREATE POLICY "Allow all authenticated users" ON settings FOR ALL USING (true);
 CREATE POLICY "Allow all authenticated users" ON activity_logs FOR ALL USING (true);
 
