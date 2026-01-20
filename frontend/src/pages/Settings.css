@@ -19,7 +19,20 @@
 .settings-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 30px;
+  gap: var(--spacing-xl);
+}
+
+@media (max-width: 768px) {
+  .settings-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .settings-grid {
+    gap: var(--spacing-md);
+  }
 }
 
 .settings-card,
@@ -31,6 +44,24 @@
 .info-card h2 {
   margin-top: 0;
   margin-bottom: 10px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-card h2::before {
+  content: '\f013';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  font-size: 1.25rem;
+}
+
+.info-card h2::before {
+  content: '\f05a';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  font-size: 1.25rem;
 }
 
 .section-desc {
@@ -47,6 +78,11 @@
 
 .input-group input {
   flex: 1;
+}
+
+.input-group input:focus {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 20px rgba(0, 217, 255, 0.15);
 }
 
 .input-addon {
@@ -128,6 +164,17 @@
 .config-list .label {
   font-size: 0.9rem;
   color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.config-list .label::before {
+  content: '\f111';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  color: var(--neon-cyan);
+  font-size: 0.5rem;
 }
 
 .config-list .value { font-weight: 600; color: var(--text-primary); }
@@ -142,9 +189,21 @@
 
 .process-list li { margin-bottom: 12px; }
 
-.warning-section { border-radius: 8px; padding: 16px !important; margin-bottom: 0 !important; border-bottom: none !important; }
+.warning-section { border-radius: 8px; padding: 16px !important; margin-bottom: 0 !important; border-bottom: none !important; background: rgba(255, 0, 110, 0.05); border: 1px solid rgba(255, 0, 110, 0.2); }
 
-.warning-section h3 {}
+.warning-section h3 {
+  color: var(--neon-magenta);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.warning-section h3::before {
+  content: '\f071';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  font-size: 1.1rem;
+}
 
 .notes-list {
   list-style: none;
@@ -160,7 +219,7 @@
   color: var(--text-primary);
 }
 
-.notes-list li:before { content: '•'; position: absolute; left: 0; font-weight: bold; }
+.notes-list li:before { content: '\f111'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; left: 0; color: var(--neon-cyan); font-size: 0.5rem; }
 
 .loading-container {
   display: flex;

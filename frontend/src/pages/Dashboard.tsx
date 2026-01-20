@@ -166,7 +166,7 @@ export function Dashboard() {
 
       {/* Primary Stats */}
       <div className="stats-grid">
-        <div className="stat-card stat-card-cyan">
+        <div className="stat-card">
           <div className="stat-icon"><Calendar size={24} /></div>
           <div className="stat-content">
             <h3>Events</h3>
@@ -175,7 +175,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="stat-card stat-card-lime">
+        <div className="stat-card">
           <div className="stat-icon"><Users size={24} /></div>
           <div className="stat-content">
             <h3>Participants</h3>
@@ -184,7 +184,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="stat-card stat-card-magenta">
+        <div className="stat-card">
           <div className="stat-icon"><AlertCircle size={24} /></div>
           <div className="stat-content">
             <h3>No-Shows</h3>
@@ -193,7 +193,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="stat-card stat-card-purple">
+        <div className="stat-card">
           <div className="stat-icon"><Ban size={24} /></div>
           <div className="stat-content">
             <h3>Blocklisted</h3>
@@ -230,7 +230,7 @@ export function Dashboard() {
               </div>
             </div>
 
-            <div className="event-stat-card success">
+            <div className="event-stat-card">
               <div className="event-stat-icon"><CheckCircle size={20} /></div>
               <div className="event-stat-content">
                 <span className="label">Attended</span>
@@ -238,7 +238,7 @@ export function Dashboard() {
               </div>
             </div>
 
-            <div className="event-stat-card danger">
+            <div className="event-stat-card">
               <div className="event-stat-icon"><AlertCircle size={20} /></div>
               <div className="event-stat-content">
                 <span className="label">No-Shows</span>

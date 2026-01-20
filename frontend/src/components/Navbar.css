@@ -6,13 +6,27 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 0 var(--spacing-lg);
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
   box-shadow: 0 0 30px rgba(0, 217, 255, 0.1);
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    height: 56px;
+    padding: 0 var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    height: 52px;
+    padding: 0 var(--spacing-sm);
+  }
 }
 
 /* Left Section: Hamburger + Brand */
@@ -52,7 +66,7 @@
 .brand-link {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--spacing-sm);
   text-decoration: none;
   color: var(--neon-cyan);
   font-weight: 700;
@@ -62,7 +76,19 @@
 
 .brand-link:hover {
   text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
-  gap: 12px;
+  gap: calc(var(--spacing-sm) + 2px);
+}
+
+@media (max-width: 768px) {
+  .brand-link {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-link {
+    font-size: 1rem;
+  }
 }
 
 .brand-icon {
@@ -74,24 +100,55 @@
   object-fit: contain;
 }
 
+@media (max-width: 480px) {
+  .brand-icon {
+    width: 28px;
+    height: 28px;
+  }
+}
+
 .brand-text {
   white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .brand-text {
+    display: none;
+  }
 }
 
 /* User Info & Logout on Right */
 .navbar-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-md);
+}
+
+@media (max-width: 768px) {
+  .navbar-right {
+    gap: var(--spacing-sm);
+  }
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #f5f5f7;
+  gap: var(--spacing-sm);
+  color: var(--text-primary);
   font-size: 0.95rem;
   font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .user-info {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-info span {
+    display: none;
+  }
 }
 
 .user-avatar {

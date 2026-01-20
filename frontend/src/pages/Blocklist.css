@@ -3,17 +3,32 @@
 }
 
 .page-header {
-  margin-bottom: 30px;
+  margin-bottom: var(--spacing-xl);
   margin-top: 0;
 }
 
 .page-header h1 {
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-sm);
   margin-top: 0;
+  color: var(--text-primary);
 }
 
 .page-header p {
   font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    margin-bottom: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    margin-bottom: var(--spacing-md);
+  }
 }
 
 .blocklist-stat {
@@ -25,9 +40,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
   flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .list-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
 }
 
 .search-container {
@@ -35,40 +58,90 @@
   min-width: 250px;
 }
 
+@media (max-width: 768px) {
+  .search-container {
+    min-width: 100%;
+  }
+}
+
 .search-input {
   width: 100%;
   padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
   transition: all 0.3s ease;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
 }
 
 .search-input:focus {
   outline: none;
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 15px rgba(0, 217, 255, 0.2);
+}
+
+@media (max-width: 480px) {
+  .search-input {
+    font-size: 16px; /* Prevents iOS zoom */
+  }
 }
 
 .action-buttons {
   display: flex;
-  gap: 10px;
+  gap: var(--spacing-sm);
   flex-wrap: wrap;
 }
 
+@media (max-width: 768px) {
+  .action-buttons {
+    width: 100%;
+    gap: var(--spacing-sm);
+  }
+  
+  .action-buttons .btn {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .action-buttons .btn {
+    width: 100%;
+  }
+}
+
 .add-form-section {
-  background: rgba(0, 217, 255, 0.05);
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
+  background: rgba(0, 217, 255, 0.03);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid var(--border-color);
 }
 
 .add-form-section h3 {
-  margin: 0 0 16px 0;
+  margin: 0 0 var(--spacing-md) 0;
   font-size: 1rem;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.add-form-section h3::before {
+  content: '\f067';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  color: var(--neon-cyan);
 }
 
 .add-form-section form {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 .add-form-section .form-group {
@@ -78,18 +151,30 @@
 .add-form-section label {
   font-size: 0.95rem;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-sm);
   display: block;
+  color: var(--neon-cyan);
 }
 
 .add-form-section select,
 .add-form-section textarea {
   width: 100%;
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 0.9rem;
   font-family: inherit;
   transition: all 0.3s ease;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.add-form-section select:focus,
+.add-form-section textarea:focus {
+  outline: none;
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 15px rgba(0, 217, 255, 0.2);
+  background: var(--card-bg);
 }
 
 .add-form-section textarea {
@@ -111,14 +196,22 @@
 
 .blocklist-items {
   display: grid;
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 .blocklist-item {
-  padding: 20px !important;
+  padding: var(--spacing-lg) !important;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  transition: all 0.3s ease;
 }
 
-.blocklist-item:hover {}
+.blocklist-item:hover {
+  border-color: var(--neon-magenta);
+  box-shadow: 0 0 20px rgba(255, 0, 110, 0.1);
+  transform: translateX(4px);
+}
 
 .item-header {
   display: flex;

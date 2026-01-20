@@ -18,9 +18,24 @@
 
 .stats-section {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+@media (max-width: 768px) {
+  .stats-section {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-section {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+  }
 }
 
 .list-header {
@@ -40,13 +55,23 @@
 .search-input {
   width: 100%;
   padding: 10px 14px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 0.9rem;
   transition: all 0.3s ease;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
 }
 
 .search-input:focus {
   outline: none;
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 15px rgba(0, 217, 255, 0.2);
+  background: var(--card-bg);
+}
+
+.search-input::placeholder {
+  color: var(--text-secondary);
 }
 
 .action-buttons {
@@ -56,21 +81,32 @@
 }
 
 .add-form-section {
-  background: rgba(0, 217, 255, 0.05);
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
+  background: rgba(255, 0, 110, 0.03);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid rgba(255, 0, 110, 0.2);
 }
 
 .add-form-section h3 {
-  margin: 0 0 16px 0;
+  margin: 0 0 var(--spacing-md) 0;
   font-size: 1rem;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.add-form-section h3::before {
+  content: '\f071';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
 }
 
 .add-form-section form {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 .add-form-section .form-group {
@@ -80,8 +116,9 @@
 .add-form-section label {
   font-size: 0.95rem;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-sm);
   display: block;
+  color: var(--neon-magenta);
 }
 
 .add-form-section select {
@@ -106,14 +143,22 @@
 
 .no-show-items {
   display: grid;
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 .no-show-item {
-  padding: 20px !important;
+  padding: var(--spacing-lg) !important;
+  background: var(--card-bg);
+  border: 1px solid rgba(255, 0, 110, 0.3);
+  border-radius: var(--radius-lg);
+  transition: all 0.3s ease;
 }
 
-.no-show-item:hover {}
+.no-show-item:hover {
+  border-color: var(--neon-magenta);
+  box-shadow: 0 0 20px rgba(255, 0, 110, 0.15);
+  transform: translateX(4px);
+}
 
 .item-header {
   display: flex;

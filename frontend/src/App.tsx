@@ -11,6 +11,7 @@ import { Blocklist } from './pages/Blocklist';
 import { Settings } from './pages/Settings';
 import './styles/globals.css';
 import './styles/index.css';
+import './styles/responsive.css';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
