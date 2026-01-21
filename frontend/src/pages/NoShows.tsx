@@ -79,8 +79,16 @@ export function NoShows() {
       const response = await attendanceAPI.getNoShows();
       console.log('No-shows response:', response);
       
-      // Response might be array or have data property
-      const noShowsData = Array.isArray(response) ? response : (response.data || response || []);
+      // Extract data array from response (handle both axios and direct response)
+      let noShowsData: NoShowRecord[] = [];
+      
+      if (Array.isArray(response)) {
+        noShowsData = response;
+      } else if (response && typeof response === 'object') {
+        // If response has data property, use it; otherwise use response if it's an array
+        noShowsData = response.data && Array.isArray(response.data) ? response.data : 
+                      Array.isArray(response) ? response : [];
+      }
       
       setNoShowRecords(noShowsData);
       setFilteredRecords(noShowsData);

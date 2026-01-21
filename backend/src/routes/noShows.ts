@@ -18,7 +18,7 @@ const router = Router();
 
 /**
  * GET /api/no-shows
- * Returns: { total, count, data: [...], uniqueParticipants }
+ * Returns: { data: [...], total, count, uniqueParticipants }
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -30,10 +30,10 @@ router.get('/', async (req: Request, res: Response) => {
     const uniqueParticipants = Object.keys(noShowsByParticipant).length;
 
     return res.json({
+      data: records,
       total: records.length,
       uniqueParticipants,
-      count: records.length,
-      data: records
+      count: records.length
     });
   } catch (error) {
     console.error('No-shows list error:', error);

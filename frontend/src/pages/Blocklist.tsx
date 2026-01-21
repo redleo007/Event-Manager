@@ -30,7 +30,17 @@ export function Blocklist() {
     try {
       const response = await blocklistAPI.getAll();
       console.log('Blocklist response:', response);
-      const entries = Array.isArray(response) ? response : (response.data || []);
+      
+      // Extract data array from response (handle both axios and direct response)
+      let entries: BlocklistEntry[] = [];
+      
+      if (Array.isArray(response)) {
+        entries = response;
+      } else if (response && typeof response === 'object') {
+        // If response has data property, use it; otherwise skip
+        entries = response.data && Array.isArray(response.data) ? response.data : [];
+      }
+      
       setBlocklistData(entries);
       setFilteredData(entries);
       setCount(entries.length);
