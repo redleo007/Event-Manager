@@ -1,3 +1,39 @@
+/* CSS Theme Variables */
+:root {
+  /* Colors */
+  --dark-bg: #050811;
+  --card-bg: #0f0f1e;
+  --input-bg: #1a1a2e;
+  --border-color: rgba(0, 217, 255, 0.1);
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0b0;
+  
+  /* Neon Colors */
+  --neon-cyan: #00d9ff;
+  --neon-purple: #7c3aed;
+  --neon-magenta: #ff006e;
+  --neon-lime: #00ff41;
+  
+  /* Status Colors */
+  --success: #22c55e;
+  --error: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
 /* Global utilities and components (theme variables and base colors live in globals.css) */
 
 a { color: var(--neon-cyan); text-decoration: none; transition: all 0.3s ease; }
