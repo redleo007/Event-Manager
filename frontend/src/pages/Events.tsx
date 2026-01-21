@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Plus, Save, CheckCircle, Calendar, MapPin, Edit, Trash2 } from 'lucide-react';
+import { X, Plus, Save, CheckCircle, Edit, Trash2 } from 'lucide-react';
 import { eventsAPI } from '../api/client';
 import { useAsync } from '../utils/hooks';
 import { formatDate } from '../utils/formatters';
@@ -208,13 +208,11 @@ export function Events() {
               <div key={event.id} className="event-card card">
                 <div className="event-header">
                   <h3>{event.name}</h3>
-                  <span className="event-date"><Calendar size={16} style={{ display: 'inline', marginRight: '4px' }} /> {formatDate(event.date)}</span>
+                  <span className="event-date">{formatDate(event.date)}</span>
                 </div>
 
                 {event.location && (
-                  <p className="event-location">
-                    <MapPin size={16} /> {event.location}
-                  </p>
+                  <p className="event-location">{event.location}</p>
                 )}
 
                 {event.description && (

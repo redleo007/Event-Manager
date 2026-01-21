@@ -211,6 +211,14 @@
   font-weight: 600;
 }
 
+.event-date::before {
+  content: '\f133';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 400;
+  margin-right: 6px;
+  opacity: 0.8;
+}
+
 .event-location { 
   margin: 0; 
   font-size: 0.875rem;
@@ -220,9 +228,12 @@
   gap: 6px;
 }
 
-.event-location svg {
-  flex-shrink: 0;
-  vertical-align: middle;
+.event-location::before {
+  content: '\f3c5';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 400;
+  margin-right: 6px;
+  opacity: 0.8;
 }
 
 /* Event Details Panel */
@@ -270,12 +281,25 @@
   color: var(--neon-cyan);
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
 }
 
-.event-meta svg {
-  flex-shrink: 0;
-  vertical-align: middle;
+.meta-date::before {
+  content: '\f133';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 400;
+  margin-right: 6px;
+  opacity: 0.8;
+}
+
+.meta-location::before {
+  content: ' • \f3c5 ';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 400;
+  margin-left: 6px;
+  opacity: 0.8;
+  color: var(--text-secondary);
 }
 
 .event-description { 

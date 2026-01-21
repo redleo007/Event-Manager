@@ -153,6 +153,14 @@
   gap: var(--spacing-xs);
 }
 
+.event-date::before {
+  content: '\f133';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 400;
+  margin-right: 6px;
+  opacity: 0.8;
+}
+
 .event-location { 
   font-size: 0.9rem; 
   margin: var(--spacing-sm) 0; 
@@ -162,9 +170,12 @@
   gap: 6px;
 }
 
-.event-location svg {
-  flex-shrink: 0;
-  vertical-align: middle;
+.event-location::before {
+  content: '\f3c5';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 400;
+  margin-right: 6px;
+  opacity: 0.8;
 }
 
 .event-description { 

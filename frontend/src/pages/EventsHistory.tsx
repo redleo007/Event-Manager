@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, BarChart3, MapPin, CheckCircle, XCircle } from 'lucide-react';
+import { BarChart3, CheckCircle, XCircle } from 'lucide-react';
 import { eventsAPI, attendanceAPI } from '../api/client';
 import { useAsync } from '../utils/hooks';
 import { formatDate, formatDateTime } from '../utils/formatters';
@@ -154,9 +154,7 @@ export function EventsHistory() {
                     </span>
                   </div>
                   {event.location && (
-                    <p className="event-location">
-                      <MapPin size={16} /> {event.location}
-                    </p>
+                    <p className="event-location">{event.location}</p>
                   )}
                 </div>
               ))
@@ -182,12 +180,9 @@ export function EventsHistory() {
                 <div>
                   <h2>{selectedEvent.name}</h2>
                   <p className="event-meta">
-                    <Calendar size={16} /> {formatDate(selectedEvent.date)}
+                    <span className="meta-date">{formatDate(selectedEvent.date)}</span>
                     {selectedEvent.location && (
-                      <>
-                        {' • '}
-                        <MapPin size={16} /> {selectedEvent.location}
-                      </>
+                      <span className="meta-location">{selectedEvent.location}</span>
                     )}
                   </p>
                   {selectedEvent.description && (

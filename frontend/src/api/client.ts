@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Use environment variable or fallback to /api for proxy
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -82,6 +82,7 @@ export const settingsAPI = {
 // Dashboard API
 export const dashboardAPI = {
   getStats: () => api.get('/dashboard/stats'),
+  getSummary: () => api.get('/dashboard/summary'),
 };
 
 // Error handler

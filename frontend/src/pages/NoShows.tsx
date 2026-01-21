@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { XCircle, Download, Plus, Trash2 } from 'lucide-react';
-import { participantsAPI, eventsAPI } from '../api/client';
+import { participantsAPI, eventsAPI, attendanceAPI } from '../api/client';
 import { formatDateTime } from '../utils/formatters';
 import './NoShows.css';
 
@@ -76,18 +76,11 @@ export function NoShows() {
     setLoading(true);
     try {
       // Load all no-show records from new API
-      const apiUrl = import.meta.env.VITE_API_URL || '/api';
-      const url = `${apiUrl}/no-shows`;
-      console.log('Fetching no-shows from:', url);
+      const response = await attendanceAPI.getNoShows();
+      console.log('No-shows response:', response);
       
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
-      }
-      const data = await response.json();
-      
-      // Response has: { total, uniqueParticipants, count, data }
-      const noShowsData = data.data || [];
+      // Response might be array or have data property
+      const noShowsData = Array.isArray(response) ? response : (response.data || response || []);
       
       setNoShowRecords(noShowsData);
       setFilteredRecords(noShowsData);

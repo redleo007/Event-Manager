@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Trash2, Plus } from "lucide-react";
+import { blocklistAPI } from "../api/client";
 import "./Blocklist.css";
 
 interface BlocklistEntry {
@@ -27,19 +28,12 @@ export function Blocklist() {
   const loadBlocklist = async () => {
     setLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '/api';
-      const url = `${apiUrl}/blocklist`;
-      console.log('Fetching blocklist from:', url);
-      
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
-      }
-      const data = await response.json();
-      const entries = data.data || [];
+      const response = await blocklistAPI.getAll();
+      console.log('Blocklist response:', response);
+      const entries = Array.isArray(response) ? response : (response.data || []);
       setBlocklistData(entries);
       setFilteredData(entries);
-      setCount(data.total || entries.length);
+      setCount(entries.length);
     } catch (error) {
       console.error("Failed to load blocklist:", error);
       setMessage({ type: "error", text: "Failed to load blocklist" });

@@ -9,7 +9,7 @@ import { getNoShowStats } from '../services/attendanceService';
 const router = Router();
 
 router.get(
-  '/dashboard/summary',
+  '/stats',
   asyncHandler(async (_req: Request, res: Response) => {
     const events = await getEvents();
     const activeParticipants = await getActiveParticipantsCount();

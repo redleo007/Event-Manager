@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { Calendar, Users, AlertCircle, Ban, RefreshCcw } from "lucide-react";
+import { dashboardAPI } from "../api/client";
 import "./Dashboard.css";
 
 interface DashboardStats {
-  events: number;
-  participants: number;
-  noShows: number;
-  blocklisted: number;
-  lastUpdated: string;
+  totalEvents?: number;
+  activeParticipants?: number;
+  blocklistedParticipants?: number;
+  noShows?: number;
+  events?: number;
+  participants?: number;
+  blocklisted?: number;
 }
 
 export function Dashboard() {
@@ -24,21 +27,11 @@ export function Dashboard() {
     setLoading(true);
     setError(null);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '/api';
-      const url = `${apiUrl}/dashboard/summary`;
-      console.log('Fetching dashboard from:', url);
-      
-      const response = await fetch(url);
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`API error: ${response.status} ${response.statusText} - ${errorText.substring(0, 100)}`);
-      }
-      const contentType = response.headers.get('content-type');
-      if (!contentType?.includes('application/json')) {
-        throw new Error(`Invalid response type: ${contentType}`);
-      }
-      const data = await response.json();
-      setStats(data);
+      const response = await dashboardAPI.getStats();
+      console.log('Dashboard data:', response);
+      // Handle both axios response and raw data
+      const data = response.data || response;
+      setStats(data as DashboardStats);
     } catch (err) {
       console.error("Failed to load dashboard:", err);
       setError("Failed to load dashboard data");
@@ -78,11 +71,11 @@ export function Dashboard() {
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon"><Calendar size={24} /></div>
-          <div className="stat-content"><h3>Events</h3><p className="stat-value">{stats?.events || 0}</p></div>
+          <div className="stat-content"><h3>Events</h3><p className="stat-value">{stats?.totalEvents || stats?.events || 0}</p></div>
         </div>
         <div className="stat-card">
           <div className="stat-icon"><Users size={24} /></div>
-          <div className="stat-content"><h3>Participants</h3><p className="stat-value">{stats?.participants || 0}</p></div>
+          <div className="stat-content"><h3>Participants</h3><p className="stat-value">{stats?.activeParticipants || stats?.participants || 0}</p></div>
         </div>
         <div className="stat-card">
           <div className="stat-icon"><AlertCircle size={24} /></div>
@@ -90,7 +83,7 @@ export function Dashboard() {
         </div>
         <div className="stat-card">
           <div className="stat-icon"><Ban size={24} /></div>
-          <div className="stat-content"><h3>Blocklisted</h3><p className="stat-value">{stats?.blocklisted || 0}</p></div>
+          <div className="stat-content"><h3>Blocklisted</h3><p className="stat-value">{stats?.blocklistedParticipants || stats?.blocklisted || 0}</p></div>
         </div>
       </div>
 
