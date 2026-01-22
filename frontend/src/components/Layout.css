@@ -194,9 +194,33 @@ html, body {
 .container {
   max-width: 1400px;
   width: 100%;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-2xl);
   box-sizing: border-box;
   margin: 0 auto;
+}
+
+@media (max-width: 1400px) {
+  .container {
+    padding: var(--spacing-xl);
+  }
+}
+
+@media (max-width: 1024px) {
+  .container {
+    padding: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: var(--spacing-md);
+  }
 }
 
 /* ====================================

@@ -53,31 +53,50 @@ a:hover { text-shadow: 0 0 10px rgba(0, 217, 255, 0.5); }
 }
 
 .grid-cols-2 {
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
 }
 
-.grid-cols-3 {
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-}
-
-.grid-cols-4 {
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-}
-
-/* Responsive grid adjustments */
-@media (max-width: 768px) {
-  .grid-cols-2,
-  .grid-cols-3,
-  .grid-cols-4 {
-    grid-template-columns: 1fr;
-    gap: 16px;
+@media (max-width: 1200px) {
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (min-width: 769px) and (max-width: 1023px) {
-  .grid-cols-3,
+@media (max-width: 768px) {
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.grid-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 1200px) {
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.grid-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 1400px) {
   .grid-cols-4 {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .grid-cols-4 {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -104,25 +123,30 @@ a:hover { text-shadow: 0 0 10px rgba(0, 217, 255, 0.5); }
 }
 
 /* Cards */
-.card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; transition: all 0.3s ease; box-shadow: 0 0 20px rgba(0, 217, 255, 0.1); }
-.card:hover { border-color: var(--neon-cyan); box-shadow: 0 0 30px rgba(0, 217, 255, 0.2); transform: translateY(-4px); }
-
-.card-elevated {
-  box-shadow: 0 0 40px rgba(177, 0, 255, 0.15);
+.card { 
+  background: var(--card-bg); 
+  border: 1px solid var(--border-color); 
+  border-radius: 12px; 
+  padding: var(--spacing-xl);
+  transition: all 0.3s ease; 
+  box-shadow: 0 0 20px rgba(0, 217, 255, 0.1); 
 }
 
-/* Responsive card padding */
-@media (max-width: 768px) {
+.card:hover { 
+  border-color: var(--neon-cyan); 
+  box-shadow: 0 0 30px rgba(0, 217, 255, 0.2); 
+  transform: translateY(-4px); 
+}
+
+@media (max-width: 1200px) {
   .card {
-    padding: 16px;
-    border-radius: 10px;
+    padding: var(--spacing-lg);
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .card {
-    padding: 14px;
-    border-radius: 8px;
+    padding: var(--spacing-md);
   }
 }
 

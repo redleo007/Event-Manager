@@ -235,9 +235,9 @@ export function Dashboard() {
             <div className="action-icon"><Calendar size={32} /></div>
             <div className="action-text"><h4>Events</h4></div>
           </a>
-          <a href="/participants" className="action-card" title="Go to Participants">
+          <a href="/import-attendance" className="action-card" title="Go to Attendance">
             <div className="action-icon"><Users size={32} /></div>
-            <div className="action-text"><h4>Participants</h4></div>
+            <div className="action-text"><h4>Attendance</h4></div>
           </a>
           <a href="/no-shows" className="action-card" title="Go to No-Shows">
             <div className="action-icon"><AlertCircle size={32} /></div>
