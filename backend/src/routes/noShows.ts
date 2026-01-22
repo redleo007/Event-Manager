@@ -2,9 +2,14 @@
  * NO-SHOWS API - OPTIMIZED FOR PERFORMANCE
  * Endpoints: list, add, delete, export CSV
  * All operations use aggregated queries - NO N+1
+ * 
+ * ROUTE ORDER: Specific routes must come BEFORE generic ones!
+ * Order: /export/csv, /count, /participant/:id, /, POST /, DELETE /:id
  */
 
 import { Router, Request, Response } from 'express';
+import { asyncHandler } from '../middleware/errorHandler';
+import { successResponse } from '../utils/response';
 import {
   getNoShowTotal,
   getAllNoShows,
@@ -17,61 +22,13 @@ import { syncAutoBlocklist } from '../services/blocklistService';
 const router = Router();
 
 /**
- * GET /api/no-shows
- * Returns: { data: [...], total, count, uniqueParticipants }
- */
-router.get('/', async (req: Request, res: Response) => {
-  try {
-    // Get all no-show records (single aggregated query)
-    const records = await getAllNoShows();
-
-    // Get count by participant
-    const noShowsByParticipant = await getNoShowsByParticipant();
-    const uniqueParticipants = Object.keys(noShowsByParticipant).length;
-
-    return res.json({
-      data: records,
-      total: records.length,
-      uniqueParticipants,
-      count: records.length
-    });
-  } catch (error) {
-    console.error('No-shows list error:', error);
-    return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Internal server error'
-    });
-  }
-});
-
-/**
- * GET /api/no-shows/count
- * Returns: { total, uniqueParticipants }
- * Lightweight endpoint for dashboard/frontend
- */
-router.get('/count', async (req: Request, res: Response) => {
-  try {
-    const total = await getNoShowTotal();
-    const noShowsByParticipant = await getNoShowsByParticipant();
-    const uniqueParticipants = Object.keys(noShowsByParticipant).length;
-
-    return res.json({
-      total,
-      uniqueParticipants
-    });
-  } catch (error) {
-    console.error('No-shows count error:', error);
-    return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Internal server error'
-    });
-  }
-});
-
-/**
  * GET /api/no-shows/export/csv
  * Export all no-shows as CSV file
+ * MUST be before /:id route
  */
-router.get('/export/csv', async (req: Request, res: Response) => {
-  try {
+router.get(
+  '/export/csv',
+  asyncHandler(async (_req: Request, res: Response) => {
     const records = await getAllNoShows();
 
     // Build CSV manually (no external dependency)
@@ -95,22 +52,82 @@ router.get('/export/csv', async (req: Request, res: Response) => {
     // Send as file download
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="no-shows.csv"');
-    return res.send(csvContent);
-  } catch (error) {
-    console.error('No-shows export error:', error);
-    return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Internal server error'
-    });
-  }
-});
+    res.send(csvContent);
+  })
+);
+
+/**
+ * GET /api/no-shows/count
+ * Returns: { success, data: { total, uniqueParticipants }, timestamp }
+ * Lightweight endpoint for dashboard/frontend
+ * MUST be before / route
+ */
+router.get(
+  '/count',
+  asyncHandler(async (_req: Request, res: Response) => {
+    const total = await getNoShowTotal();
+    const noShowsByParticipant = await getNoShowsByParticipant();
+    const uniqueParticipants = Object.keys(noShowsByParticipant).length;
+
+    res.json(successResponse({
+      total,
+      uniqueParticipants
+    }));
+  })
+);
+
+/**
+ * GET /api/no-shows/participant/:id
+ * Get all no-shows for a specific participant
+ * MUST be before /:id route
+ */
+router.get(
+  '/participant/:id',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    
+    const records = await getAllNoShows();
+    const participantNoShows = records.filter(r => r.participant_id === id);
+
+    res.json(successResponse({
+      total: participantNoShows.length,
+      data: participantNoShows
+    }));
+  })
+);
+
+/**
+ * GET /api/no-shows
+ * Returns: { success, data: { records, total, count, uniqueParticipants }, timestamp }
+ * Generic GET - after specific routes
+ */
+router.get(
+  '/',
+  asyncHandler(async (_req: Request, res: Response) => {
+    // Get all no-show records (single aggregated query)
+    const records = await getAllNoShows();
+
+    // Get count by participant
+    const noShowsByParticipant = await getNoShowsByParticipant();
+    const uniqueParticipants = Object.keys(noShowsByParticipant).length;
+
+    res.json(successResponse({
+      data: records,
+      total: records.length,
+      uniqueParticipants,
+      count: records.length
+    }));
+  })
+);
 
 /**
  * POST /api/no-shows
  * Manually mark participant as no-show
  * Body: { participant_id, event_id }
  */
-router.post('/', async (req: Request, res: Response) => {
-  try {
+router.post(
+  '/',
+  asyncHandler(async (req: Request, res: Response) => {
     const { participant_id, event_id } = req.body;
 
     if (!participant_id || !event_id) {
@@ -125,24 +142,17 @@ router.post('/', async (req: Request, res: Response) => {
     // Sync auto-blocklist (participant might need to be auto-blocked now)
     await syncAutoBlocklist();
 
-    return res.json({
-      success: true,
-      data: attendance
-    });
-  } catch (error) {
-    console.error('Mark no-show error:', error);
-    return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Internal server error'
-    });
-  }
-});
+    res.json(successResponse(attendance));
+  })
+);
 
 /**
  * DELETE /api/no-shows/:id
  * Remove/undo a no-show record
  */
-router.delete('/:id', async (req: Request, res: Response) => {
-  try {
+router.delete(
+  '/:id',
+  asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
     if (!id) {
@@ -156,40 +166,8 @@ router.delete('/:id', async (req: Request, res: Response) => {
     // Sync auto-blocklist (participant might need to be removed if now <2 no-shows)
     await syncAutoBlocklist();
 
-    return res.json({
-      success: true,
-      message: 'No-show record deleted'
-    });
-  } catch (error) {
-    console.error('Delete no-show error:', error);
-    return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Internal server error'
-    });
-  }
-});
-
-/**
- * GET /api/no-shows/participant/:id
- * Get all no-shows for a specific participant
- */
-router.get('/participant/:id', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    
-    const records = await getAllNoShows();
-    const participantNoShows = records.filter(r => r.participant_id === id);
-
-    return res.json({
-      total: participantNoShows.length,
-      data: participantNoShows
-    });
-  } catch (error) {
-    console.error('Participant no-shows error:', error);
-    return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Internal server error'
-    });
-  }
-});
+    res.json(successResponse({ message: 'No-show record deleted' }));
+  })
+);
 
 export default router;
-
