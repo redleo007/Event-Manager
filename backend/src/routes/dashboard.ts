@@ -4,7 +4,7 @@ import { successResponse } from '../utils/response';
 import { getBlocklistCount } from '../services/blocklistService';
 import { getEvents } from '../services/eventService';
 import { getActiveParticipantsCount } from '../services/participantService';
-import { getNoShowStats } from '../services/attendanceService';
+import { getNoShowTotal } from '../services/attendanceService';
 
 const router = Router();
 
@@ -14,13 +14,13 @@ router.get(
     const events = await getEvents();
     const activeParticipants = await getActiveParticipantsCount();
     const blocklistedParticipants = await getBlocklistCount();
-    const noShowStats = await getNoShowStats();
+    const noShows = await getNoShowTotal();
 
     res.json(successResponse({
       totalEvents: events.length,
       activeParticipants,
       blocklistedParticipants,
-      noShows: noShowStats.total,
+      noShows,
       recentActivities: [],
     }));
   })
