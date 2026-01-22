@@ -195,8 +195,8 @@ export function NoShows() {
   return (
     <div className="no-shows">
       <div className="page-header">
-        <h1>No-Show Records</h1>
-        <p>Track participants who missed events</p>
+        <h1>No-Shows Management</h1>
+        <p>Manage participants who missed events - search, add, edit, remove</p>
       </div>
 
       {message && (
@@ -209,7 +209,7 @@ export function NoShows() {
         <div className="stat-card">
           <div className="stat-icon"><XCircle size={40} /></div>
           <div className="stat-content">
-            <h3>Total No-Shows</h3>
+            <h3>TOTAL NO-SHOWS</h3>
             <p className="stat-value">{totalNoShows}</p>
           </div>
         </div>
