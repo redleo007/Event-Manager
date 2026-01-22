@@ -232,20 +232,20 @@ export function Dashboard() {
         <h2>Quick Access</h2>
         <div className="actions-grid">
           <a href="/events" className="action-card" title="Go to Events">
-            <Calendar size={24} />
-            <h4>Events</h4>
+            <div className="action-icon"><Calendar size={32} /></div>
+            <div className="action-text"><h4>Events</h4></div>
           </a>
           <a href="/participants" className="action-card" title="Go to Participants">
-            <Users size={24} />
-            <h4>Participants</h4>
+            <div className="action-icon"><Users size={32} /></div>
+            <div className="action-text"><h4>Participants</h4></div>
           </a>
           <a href="/no-shows" className="action-card" title="Go to No-Shows">
-            <AlertCircle size={24} />
-            <h4>No-Shows</h4>
+            <div className="action-icon"><AlertCircle size={32} /></div>
+            <div className="action-text"><h4>No-Shows</h4></div>
           </a>
           <a href="/blocklist" className="action-card" title="Go to Blocklist">
-            <Ban size={24} />
-            <h4>Blocklist</h4>
+            <div className="action-icon"><Ban size={32} /></div>
+            <div className="action-text"><h4>Blocklist</h4></div>
           </a>
         </div>
       </div>

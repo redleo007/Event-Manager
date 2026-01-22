@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, Lock } from "lucide-react";
 import { blocklistAPI } from "../api/client";
 import "./Blocklist.css";
 
@@ -83,13 +83,21 @@ export function Blocklist() {
   return (
     <div className="blocklist">
       <div className="page-header">
-        <div><h1>Blocklist</h1><p>Manage blocked participants</p></div>
-        <button className="btn btn-primary btn-sm" onClick={loadBlocklist}>
-          Refresh ({count})
-        </button>
+        <h1>Blocklist Management</h1>
+        <p>Manage blocklisted participants - search, add, edit, remove</p>
       </div>
 
       {message && <div className={`alert alert-${message.type}`}>{message.text}</div>}
+
+      <div className="blocklist-stat">
+        <div className="stat-card">
+          <div className="stat-icon"><Lock size={40} /></div>
+          <div className="stat-content">
+            <h3>TOTAL BLOCKLISTED</h3>
+            <p className="stat-value">{count}</p>
+          </div>
+        </div>
+      </div>
 
       <div className="card">
         <div className="list-header">

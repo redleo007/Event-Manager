@@ -8,8 +8,9 @@
 }
 
 .page-header h1 {
-  margin-bottom: var(--spacing-sm);
-  margin-top: 0;
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: 1.75rem;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
@@ -23,11 +24,19 @@
   .page-header {
     margin-bottom: var(--spacing-lg);
   }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
 }
 
 @media (max-width: 480px) {
   .page-header {
     margin-bottom: var(--spacing-md);
+  }
+
+  .page-header h1 {
+    font-size: 1.25rem;
   }
 }
 
@@ -37,11 +46,11 @@
 }
 
 .stat-card {
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--spacing-lg);
   transition: all 0.3s ease;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
@@ -49,22 +58,25 @@
 
 .stat-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 0 20px rgba(0, 217, 255, 0.15);
+  box-shadow: 0 0 25px rgba(0, 217, 255, 0.2);
+  border-color: var(--neon-cyan);
+  background: rgba(0, 217, 255, 0.03);
 }
 
 .stat-icon {
-  font-size: 1.5rem;
+  font-size: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 40px;
+  min-width: 50px;
   color: var(--neon-cyan);
+  flex-shrink: 0;
 }
 
 .stat-content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .stat-content h3 {
@@ -73,10 +85,11 @@
   font-weight: 600;
   color: var(--text-secondary);
   margin: 0;
+  letter-spacing: 0.5px;
 }
 
 .stat-value {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
