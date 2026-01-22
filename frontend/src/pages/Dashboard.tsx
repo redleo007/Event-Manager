@@ -4,24 +4,18 @@ import { dashboardAPI } from "../api/client";
 import "./Dashboard.css";
 
 interface DashboardStats {
-  totalEvents?: number;
-  activeParticipants?: number;
-  blocklistedParticipants?: number;
-  noShows?: number;
-  events?: number;
-  participants?: number;
-  blocklisted?: number;
+  totalEvents: number;
+  totalParticipants: number;
+  totalNoShows: number;
+  totalBlocklisted: number;
 }
 
-// Default fallback stats to ensure dashboard always has valid data
-const DEFAULT_STATS: Required<DashboardStats> = {
+// Default fallback stats (primitives only)
+const DEFAULT_STATS: DashboardStats = {
   totalEvents: 0,
-  activeParticipants: 0,
-  blocklistedParticipants: 0,
-  noShows: 0,
-  events: 0,
-  participants: 0,
-  blocklisted: 0,
+  totalParticipants: 0,
+  totalNoShows: 0,
+  totalBlocklisted: 0,
 };
 
 /**
@@ -30,33 +24,34 @@ const DEFAULT_STATS: Required<DashboardStats> = {
  */
 const extractStatsFromResponse = (response: any): DashboardStats => {
   try {
-    // Guard: response exists and is object
-    if (!response || typeof response !== 'object') {
-      console.warn('Invalid response type:', typeof response);
-      return DEFAULT_STATS;
-    }
+    const data = response?.data ?? response ?? {};
 
-    // Extract data from axios response wrapper
-    const data = response?.data ?? response;
-
-    // Guard: data is object
-    if (typeof data !== 'object' || data === null) {
-      console.warn('Invalid data type:', typeof data);
-      return DEFAULT_STATS;
-    }
-
-    // Safely extract numeric fields with fallback
-    const stats: DashboardStats = {
-      totalEvents: Number.isInteger(data?.totalEvents) ? data.totalEvents : 0,
-      activeParticipants: Number.isInteger(data?.activeParticipants) ? data.activeParticipants : 0,
-      blocklistedParticipants: Number.isInteger(data?.blocklistedParticipants) ? data.blocklistedParticipants : 0,
-      noShows: Number.isInteger(data?.noShows) ? data.noShows : 0,
-      events: Number.isInteger(data?.events) ? data.events : 0,
-      participants: Number.isInteger(data?.participants) ? data.participants : 0,
-      blocklisted: Number.isInteger(data?.blocklisted) ? data.blocklisted : 0,
+    // Helper to coerce various input types into a safe integer (primitive number)
+    const toNumber = (v: any): number => {
+      if (typeof v === 'number' && Number.isFinite(v)) return Math.trunc(v);
+      if (typeof v === 'string') {
+        const n = Number(v.replace(/[^0-9.]/g, ''));
+        return Number.isFinite(n) ? Math.trunc(n) : 0;
+      }
+      return 0;
     };
 
-    return stats;
+    // Map only the allowed primitive fields. Support common naming variants from API.
+    const totalEvents = toNumber(data?.totalEvents ?? data?.events ?? data?.total_events ?? 0);
+    const totalParticipants = toNumber(
+      data?.totalParticipants ?? data?.participants ?? data?.total_participants ?? data?.activeParticipants ?? 0,
+    );
+    const totalNoShows = toNumber(data?.totalNoShows ?? data?.noShows ?? data?.no_shows ?? 0);
+    const totalBlocklisted = toNumber(
+      data?.totalBlocklisted ?? data?.blocklisted ?? data?.blocklistedParticipants ?? data?.blocklisted_participants ?? 0,
+    );
+
+    return {
+      totalEvents,
+      totalParticipants,
+      totalNoShows,
+      totalBlocklisted,
+    };
   } catch (error) {
     console.error('Error extracting stats:', error);
     return DEFAULT_STATS;
@@ -129,17 +124,11 @@ export function Dashboard() {
     );
   }
 
-  // Get safe stat values with full fallback chain
-  const getStatValue = (primary?: number, secondary?: number): number => {
-    if (typeof primary === 'number' && Number.isInteger(primary) && primary >= 0) return primary;
-    if (typeof secondary === 'number' && Number.isInteger(secondary) && secondary >= 0) return secondary;
-    return 0;
-  };
-
-  const eventsCount = getStatValue(stats?.totalEvents, stats?.events);
-  const participantsCount = getStatValue(stats?.activeParticipants, stats?.participants);
-  const noShowsCount = getStatValue(stats?.noShows);
-  const blocklistedCount = getStatValue(stats?.blocklistedParticipants, stats?.blocklisted);
+  // Use only the primitive values from stats
+  const eventsCount = stats.totalEvents ?? 0;
+  const participantsCount = stats.totalParticipants ?? 0;
+  const noShowsCount = stats.totalNoShows ?? 0;
+  const blocklistedCount = stats.totalBlocklisted ?? 0;
 
   // CRITICAL: Always render dashboard, even with empty state
   // This prevents white screens on deployment
