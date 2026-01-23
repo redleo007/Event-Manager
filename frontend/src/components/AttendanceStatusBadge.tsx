@@ -1,4 +1,4 @@
-import { CheckCircle, AlertCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
+import Icon from './Icon';
 
 export interface AttendanceStatusProps {
   status: 'attended' | 'no_show' | 'not_attended' | 'pending' | 'not_recorded';
@@ -12,42 +12,42 @@ export function AttendanceStatusBadge({ status, size = 'md' }: AttendanceStatusP
     case 'attended':
       return (
         <span className="badge badge-success">
-          <CheckCircle size={iconSize} />
+          <Icon name="success" alt="Attended" sizePx={iconSize} />
           Attended
         </span>
       );
     case 'no_show':
       return (
         <span className="badge badge-danger">
-          <XCircle size={iconSize} />
+          <Icon name="error" alt="No show" sizePx={iconSize} />
           No Show
         </span>
       );
     case 'not_attended':
       return (
         <span className="badge badge-warning">
-          <AlertTriangle size={iconSize} />
+          <Icon name="warning" alt="Not attended" sizePx={iconSize} />
           Not Attended
         </span>
       );
     case 'not_recorded':
       return (
         <span className="badge badge-secondary">
-          <Clock size={iconSize} />
+          <Icon name="clock" alt="Not recorded" sizePx={iconSize} />
           Not Recorded
         </span>
       );
     case 'pending':
       return (
         <span className="badge badge-info">
-          <AlertCircle size={iconSize} />
+          <Icon name="info" alt="Pending" sizePx={iconSize} />
           Pending
         </span>
       );
     default:
       return (
         <span className="badge">
-          <AlertCircle size={iconSize} />
+          <Icon name="info" alt="Unknown" sizePx={iconSize} />
           Unknown
         </span>
       );

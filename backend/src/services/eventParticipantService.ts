@@ -123,7 +123,7 @@ type DeleteBackup = {
   createdAt: number;
   used: boolean;
   participants?: Array<{ id: string; name: string; email: string; is_blocklisted: boolean; blocklist_reason?: string }>; // for participant deletes
-  attendance?: Array<{ id: string; event_id: string; participant_id: string; status: 'attended' | 'no_show'; marked_at?: string; created_at?: string } & { name?: string; email?: string }>; // include participant info for safer restore
+  attendance?: Array<{ id: string; event_id: string; participant_id: string; status: 'attended' | 'not_attended'; marked_at?: string; created_at?: string } & { name?: string; email?: string }>; // include participant info for safer restore
 };
 
 const deleteBackups: Map<string, DeleteBackup> = new Map();

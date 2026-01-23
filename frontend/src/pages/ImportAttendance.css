@@ -208,6 +208,41 @@
 }
 
 /* ================================
+   DELETE TAB ACTIONS
+================================ */
+.delete-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.delete-actions .btn-danger {
+  background: linear-gradient(90deg, #ff4d6d, #ff8c42);
+  border: 1px solid rgba(255, 77, 109, 0.5);
+  color: #0b0c10;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(255, 77, 109, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+}
+
+.delete-actions .btn-danger:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(255, 77, 109, 0.45);
+}
+
+.delete-actions .btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.delete-actions .btn {
+  flex: 1;
+  min-width: 220px;
+}
+
+/* ================================
    FORM
 ================================ */
 .form-group {

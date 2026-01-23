@@ -188,13 +188,13 @@ html, body {
 
 .main-content > .container {
   flex: 1;
-  padding-bottom: var(--spacing-2xl);
+  padding-bottom: clamp(var(--spacing-xl), 4vw, var(--spacing-3xl));
 }
 
 .container {
-  max-width: 1400px;
+  max-width: min(1440px, 96vw);
   width: 100%;
-  padding: var(--spacing-2xl);
+  padding: clamp(var(--spacing-lg), 3vw, var(--spacing-2xl));
   box-sizing: border-box;
   margin: 0 auto;
 }

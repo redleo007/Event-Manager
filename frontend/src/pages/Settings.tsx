@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader, Save, Check, X, AlertTriangle } from 'lucide-react';
+import Icon from '../components/Icon';
 import { settingsAPI } from '../api/client';
 import './Settings.css';
 
@@ -151,7 +151,7 @@ export function Settings() {
 
             <div className="form-actions">
               <button type="submit" className="btn btn-primary btn-lg" disabled={saving}>
-                {saving ? <><Loader size={18} /> Saving...</> : <><Save size={18} /> Save Settings</>}
+                {saving ? <><Icon name="loader" alt="Saving" sizePx={18} spin /> Saving...</> : <><Icon name="save" alt="Save" sizePx={18} /> Save Settings</>}
               </button>
               <button
                 type="button"
@@ -178,7 +178,7 @@ export function Settings() {
               <li>
                 <span className="label">Auto-Block Status:</span>
                 <span className={`badge ${formData.auto_block_enabled ? 'badge-success' : 'badge-danger'}`}>
-                  {formData.auto_block_enabled ? <><Check size={14} /> Enabled</> : <><X size={14} /> Disabled</>}
+                  {formData.auto_block_enabled ? <><Icon name="check" alt="Enabled" sizePx={14} /> Enabled</> : <><Icon name="close" alt="Disabled" sizePx={14} /> Disabled</>}
                 </span>
               </li>
             </ul>
@@ -205,7 +205,7 @@ export function Settings() {
           </div>
 
           <div className="info-section warning-section">
-            <h3><AlertTriangle size={20} style={{ display: 'inline', marginRight: '8px' }} /> Important Notes</h3>
+            <h3><Icon name="warning" alt="Important" sizePx={20} /> Important Notes</h3>
             <ul className="notes-list">
               <li>Changes to settings apply immediately to all future attendance records.</li>
               <li>Changing the no-show limit does not retroactively affect already-blocklisted

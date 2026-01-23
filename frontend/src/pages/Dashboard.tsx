@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Calendar, Users, AlertCircle, Ban, RefreshCcw, AlertTriangle } from "lucide-react";
 import { dashboardAPI } from "../api/client";
+import { Icon } from "../components/Icon";
 import "./Dashboard.css";
 
 /**
@@ -25,6 +25,18 @@ const DEFAULT_STATS: DashboardStats = {
   totalParticipants: 0,
   totalNoShows: 0,
   totalBlocklisted: 0,
+};
+
+type RecentEvent = {
+  title: string;
+  date?: string | null;
+  lastActivity?: string | null;
+  stats?: {
+    participants: number;
+    attendance: number;
+    noShows: number;
+    blocklisted: number;
+  };
 };
 
 /**
@@ -94,6 +106,7 @@ export function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>(DEFAULT_STATS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [recentEvent, setRecentEvent] = useState<RecentEvent | null>(null);
 
   useEffect(() => {
     document.title = "Dashboard - TechNexus Community";
@@ -110,23 +123,69 @@ export function Dashboard() {
     setError(null);
     
     try {
-      // Single API call with timeout protection
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      // Fetch stats and overview concurrently
+      const [statsRes, overviewRes] = await Promise.allSettled([
+        dashboardAPI.getStats(),
+        dashboardAPI.getOverview(),
+      ]);
 
-      let response;
-      try {
-        // Try /api/dashboard/stats (preferred endpoint)
-        response = await dashboardAPI.getStats();
-        clearTimeout(timeoutId);
-      } catch (timeoutError) {
-        clearTimeout(timeoutId);
-        throw new Error('Dashboard API request timed out');
+      let nextStats: DashboardStats | null = null;
+
+      if (overviewRes.status === 'fulfilled') {
+        const overviewRaw = overviewRes.value as any;
+        const overview = overviewRaw?.data ?? overviewRaw; // axios interceptor may unwrap to payload already
+
+        const activities = Array.isArray(overview?.recentActivities)
+          ? overview.recentActivities
+          : [];
+
+        const lastEvent = overview?.lastEvent;
+
+        if (overview?.summary) {
+          nextStats = {
+            totalEvents: overview.summary.events ?? 0,
+            totalParticipants: overview.summary.participants ?? 0,
+            totalNoShows: overview.summary.noShows ?? 0,
+            totalBlocklisted: overview.summary.blocklisted ?? 0,
+          };
+        }
+
+        if (lastEvent) {
+          setRecentEvent({
+            title: lastEvent.name,
+            date: lastEvent.date,
+            lastActivity: overview?.lastUpdated,
+            stats: {
+              participants: lastEvent.participantCount ?? 0,
+              attendance: lastEvent.attendanceCount ?? 0,
+              noShows: lastEvent.noShowCount ?? 0,
+              blocklisted: lastEvent.blocklistedInEvent ?? 0,
+            },
+          });
+        } else if (activities.length > 0) {
+          const latest = activities[0];
+          setRecentEvent({
+            title: latest?.events?.name,
+            date: latest?.events?.date || null,
+            lastActivity: latest?.marked_at || latest?.created_at || overview?.lastUpdated || null,
+          });
+        } else {
+          setRecentEvent(null);
+        }
+      } else {
+        console.warn('[Dashboard] Overview not available:', overviewRes.reason);
       }
 
-      // Map backend response to safe dashboard model
-      const mappedStats = mapBackendToDashboard(response);
-      setStats(mappedStats);
+      // If overview didn't provide stats, fall back to /stats endpoint
+      if (!nextStats) {
+        if (statsRes.status === 'fulfilled') {
+          nextStats = mapBackendToDashboard(statsRes.value);
+        } else {
+          throw statsRes.reason ?? new Error('Dashboard API request failed');
+        }
+      }
+
+      setStats(nextStats);
       setError(null);
     } catch (err) {
       // Log error for debugging
@@ -144,6 +203,7 @@ export function Dashboard() {
       // CRITICAL: Still show dashboard with defaults
       // This prevents white screen even when API fails
       setStats(DEFAULT_STATS);
+      setRecentEvent(null);
     } finally {
       setLoading(false);
     }
@@ -174,14 +234,14 @@ export function Dashboard() {
           disabled={loading}
           title={loading ? "Loading..." : "Refresh dashboard data"}
         >
-          <RefreshCcw size={16} /> Refresh
+          <Icon alt="Refresh" name="refresh" /> Refresh
         </button>
       </div>
 
       {/* ERROR ALERT */}
       {error && (
         <div className="alert alert-warning" style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <AlertTriangle size={18} />
+          <Icon alt="Warning" name="warning" sizePx={18} />
           <div>
             <strong>Dashboard Notice:</strong> {error}
           </div>
@@ -192,7 +252,7 @@ export function Dashboard() {
       <div className="stats-grid">
         {/* Total Events */}
         <div className="stat-card">
-          <div className="stat-icon"><Calendar size={24} /></div>
+          <div className="stat-icon"><Icon alt="Events" name="events" /></div>
           <div className="stat-content">
             <h3>Events</h3>
             <p className="stat-value">{stats?.totalEvents ?? 0}</p>
@@ -201,7 +261,7 @@ export function Dashboard() {
 
         {/* Total Participants */}
         <div className="stat-card">
-          <div className="stat-icon"><Users size={24} /></div>
+          <div className="stat-icon"><Icon alt="Participants" name="participants" /></div>
           <div className="stat-content">
             <h3>Participants</h3>
             <p className="stat-value">{stats?.totalParticipants ?? 0}</p>
@@ -210,7 +270,7 @@ export function Dashboard() {
 
         {/* Total No-Shows */}
         <div className="stat-card">
-          <div className="stat-icon"><AlertCircle size={24} /></div>
+          <div className="stat-icon"><Icon alt="No-Shows" name="noShows" /></div>
           <div className="stat-content">
             <h3>No-Shows</h3>
             <p className="stat-value">{stats?.totalNoShows ?? 0}</p>
@@ -219,7 +279,7 @@ export function Dashboard() {
 
         {/* Total Blocklisted */}
         <div className="stat-card">
-          <div className="stat-icon"><Ban size={24} /></div>
+          <div className="stat-icon"><Icon alt="Blocklisted" name="blocklist" /></div>
           <div className="stat-content">
             <h3>Blocklisted</h3>
             <p className="stat-value">{stats?.totalBlocklisted ?? 0}</p>
@@ -227,24 +287,73 @@ export function Dashboard() {
         </div>
       </div>
 
+      {/* Recent Event Overview */}
+      <div className="recent-event-card">
+        <div className="recent-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Icon alt="Recent" name="clock" />
+            <h2 style={{ margin: 0 }}>Recent Event</h2>
+          </div>
+          <span className="recent-updated">
+            {recentEvent?.lastActivity ? new Date(recentEvent.lastActivity).toLocaleString() : 'No activity yet'}
+          </span>
+        </div>
+        {recentEvent ? (
+          <div className="recent-body">
+            <div>
+              <p className="recent-title">{recentEvent.title}</p>
+              <p className="recent-date">{recentEvent.date ? new Date(recentEvent.date).toLocaleDateString() : '—'}</p>
+            </div>
+            <div className="recent-stats">
+              <div className="recent-stat">
+                <span className="label">Participants</span>
+                <span className="value">{recentEvent.stats?.participants ?? 0}</span>
+              </div>
+              <div className="recent-stat">
+                <span className="label">Attendance</span>
+                <span className="value">{recentEvent.stats?.attendance ?? 0}</span>
+              </div>
+              <div className="recent-stat">
+                <span className="label">No-Shows</span>
+                <span className="value">{recentEvent.stats?.noShows ?? 0}</span>
+              </div>
+              <div className="recent-stat">
+                <span className="label">Blocklisted</span>
+                <span className="value">{recentEvent.stats?.blocklisted ?? 0}</span>
+              </div>
+            </div>
+            <button className="btn btn-secondary btn-sm" onClick={loadDashboardData} disabled={loading}>
+              <Icon alt="Refresh" name="refresh" /> Refresh
+            </button>
+          </div>
+        ) : (
+          <div className="recent-body" style={{ justifyContent: 'space-between' }}>
+            <p className="recent-title">No recent activity</p>
+            <button className="btn btn-secondary btn-sm" onClick={loadDashboardData} disabled={loading}>
+              <Icon alt="Refresh" name="refresh" /> Refresh
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Quick Access Navigation - Always available */}
       <div className="quick-actions">
         <h2>Quick Access</h2>
         <div className="actions-grid">
           <a href="/events" className="action-card" title="Go to Events">
-            <div className="action-icon"><Calendar size={32} /></div>
+            <div className="action-icon"><Icon alt="Events" name="events" size="lg" /></div>
             <div className="action-text"><h4>Events</h4></div>
           </a>
           <a href="/import-attendance" className="action-card" title="Go to Attendance">
-            <div className="action-icon"><Users size={32} /></div>
+            <div className="action-icon"><Icon alt="Attendance" name="participants" size="lg" /></div>
             <div className="action-text"><h4>Attendance</h4></div>
           </a>
           <a href="/no-shows" className="action-card" title="Go to No-Shows">
-            <div className="action-icon"><AlertCircle size={32} /></div>
+            <div className="action-icon"><Icon alt="No-Shows" name="noShows" size="lg" /></div>
             <div className="action-text"><h4>No-Shows</h4></div>
           </a>
           <a href="/blocklist" className="action-card" title="Go to Blocklist">
-            <div className="action-icon"><Ban size={32} /></div>
+            <div className="action-icon"><Icon alt="Blocklist" name="blocklist" size="lg" /></div>
             <div className="action-text"><h4>Blocklist</h4></div>
           </a>
         </div>

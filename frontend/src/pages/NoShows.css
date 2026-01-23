@@ -26,7 +26,7 @@
 /* ================= STATS ================= */
 .stats-section {
   margin-bottom: 30px;
-  max-width: 320px;
+  max-width: 360px;
 }
 
 .stat-card {
@@ -38,6 +38,27 @@
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   transition: all 0.25s ease;
+}
+
+.stat-card.total-card {
+  flex-direction: row;
+  align-items: center;
+  text-align: left;
+  max-width: 360px;
+  min-width: 320px;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+}
+
+.stat-icon.large {
+  display: inline-flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: transparent;
+  border: 0;
 }
 
 .stat-card:hover {
@@ -55,6 +76,13 @@
   text-transform: uppercase;
   color: var(--text-secondary);
   margin: 0;
+}
+
+.stat-content.centered h3 {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .stat-value {

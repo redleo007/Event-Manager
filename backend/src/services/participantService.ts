@@ -55,7 +55,7 @@ export const createParticipantWithEvent = async (participantData: { full_name: s
     .insert([{
       event_id: participantData.eventpass_id,
       participant_id: data.id,
-      status: 'no_show', // Default status
+      status: 'not_attended',
     }]);
 
   if (attendanceError) {
@@ -93,7 +93,7 @@ export const bulkCreateParticipantsWithEvent = async (
   const attendanceRecords = (createdParticipants || []).map((participant, idx) => ({
     event_id: participantsData[idx].event_id,
     participant_id: participant.id,
-    status: 'no_show' as const,
+    status: 'not_attended' as const,
     import_session_id: import_session_id || null,
   }));
 
@@ -232,7 +232,7 @@ export const bulkCreateParticipantsWithEventDedup = async (
         await supabase.from('attendance').insert({
           event_id: participantData.event_id,
           participant_id: existingParticipant.id,
-          status: 'no_show',
+          status: 'not_attended',
           import_session_id: import_session_id || null,
         });
       }
@@ -255,7 +255,7 @@ export const bulkCreateParticipantsWithEventDedup = async (
       await supabase.from('attendance').insert({
         event_id: participantData.event_id,
         participant_id: newParticipant.id,
-        status: 'no_show',
+        status: 'not_attended',
         import_session_id: import_session_id || null,
       });
 

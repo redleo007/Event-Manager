@@ -122,9 +122,6 @@ router.post(
     res.json(successResponse(result));
   })
 );
-
-export default router;
-
 /**
  * POST /api/events/:event_id/participants/undo-delete
  * Undo the last delete operation for this event (one-time, token-based)
@@ -146,3 +143,5 @@ router.post(
     res.json(successResponse(result));
   })
 );
+
+export default router;

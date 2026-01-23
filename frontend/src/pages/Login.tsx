@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import Icon from '../components/Icon';
 import './Login.css';
 
 interface LoginProps {
@@ -82,7 +82,7 @@ export function Login({ onLoginSuccess }: LoginProps) {
 
             {error && (
               <div className="alert alert-error">
-                <span className="alert-icon"><AlertTriangle size={20} /></span>
+                <span className="alert-icon"><Icon name="warning" alt="Alert" sizePx={20} /></span>
                 <span className="alert-text">{error}</span>
               </div>
             )}

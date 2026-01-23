@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Trash2, Loader, CheckCircle, AlertTriangle, Check } from 'lucide-react';
+import Icon from '../components/Icon';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { participantsAPI, attendanceAPI, eventsAPI } from '../api/client';
@@ -343,13 +343,21 @@ export function ImportAttendance() {
     setImportingParticipants(true);
     
     try {
-      // Send all participants in one bulk request
-      await participantsAPI.bulkCreateWithEventBatch({
+      // Send all participants in one bulk request with fallback
+      const payload = {
         participants: participantFileData.map(row => ({
           full_name: row.name.trim(),
           event_id: selectedEventParticipants,
         })),
-      });
+      };
+
+      try {
+        await participantsAPI.bulkCreateWithEventBatch(payload);
+      } catch (primaryError) {
+        // Some deployments only expose /participants/bulk-import
+        await participantsAPI.bulkCreateWithEvent(payload);
+        void primaryError;
+      }
 
       // Session ID is captured by the import_sessions table for history tracking
 
@@ -401,17 +409,70 @@ export function ImportAttendance() {
     setImportingAttendance(true);
 
     try {
-      // Send all attendance records in one bulk request
-      const response = await attendanceAPI.bulkImportBatch({
+      // Send all attendance records in one bulk request, with a graceful fallback
+      const payload = {
         records: attendanceFileData.map(row => ({
           name: row.name.trim(),
           email: row.email.trim(),
           event_id: selectedEventAttendance,
           attendance_status: normalizeStatus(row.status),
         })),
-      });
-      
-      // Suppress unused variable warning - response contains session data
+      };
+
+      let response;
+      try {
+        response = await attendanceAPI.bulkImportBatch(payload);
+      } catch (primaryError: any) {
+        try {
+          // Some deployments expose only /attendance/bulk-import
+          response = await attendanceAPI.bulkImport(payload);
+        } catch (secondaryError: any) {
+          // If both bulk endpoints are missing, fall back to per-record marking
+          const primaryMsg = primaryError?.message || '';
+          const secondaryMsg = secondaryError?.message || '';
+          const isNotFound = primaryMsg.includes('404') && secondaryMsg.includes('404');
+
+          if (!isNotFound) {
+            throw secondaryError || primaryError;
+          }
+
+          // Fallback path: resolve participants for the event, then mark individually
+          const participantsRes = await eventsAPI.getParticipants(selectedEventAttendance);
+          const participants = Array.isArray(participantsRes?.data) ? participantsRes.data : participantsRes;
+
+          const emailToId = new Map<string, string>();
+          (participants || []).forEach((p: any) => {
+            if (p?.email && p?.id) {
+              emailToId.set(String(p.email).toLowerCase().trim(), p.id);
+            }
+          });
+
+          const missingEmails: string[] = [];
+          for (const row of attendanceFileData) {
+            const email = row.email.trim().toLowerCase();
+            const participantId = emailToId.get(email);
+            if (!participantId) {
+              missingEmails.push(row.email);
+              continue;
+            }
+
+            const status = normalizeStatus(row.status) === 'attended' ? 'attended' : 'not_attended';
+            await attendanceAPI.mark({
+              event_id: selectedEventAttendance,
+              participant_id: participantId,
+              status,
+            });
+          }
+
+          if (missingEmails.length > 0) {
+            throw new Error(`Some attendees were not found for this event: ${missingEmails.slice(0, 5).join(', ')}${missingEmails.length > 5 ? '...' : ''}`);
+          }
+
+          response = { data: { fallback: true } } as any;
+        }
+        void primaryError; // silence unused variable
+      }
+      // Suppress unused variable warning - response may contain session data
       void response;
 
       // Session ID is captured by the import_sessions table for history tracking
@@ -508,13 +569,13 @@ export function ImportAttendance() {
               </label>
               {participantFileData.length > 0 && (
                 <div className="file-info">
-                  <span><Check size={16} /> File loaded: {participantFileData.length} rows</span>
+                  <span><Icon name="check" alt="File loaded" sizePx={16} /> File loaded: {participantFileData.length} rows</span>
                   <button
                     type="button"
                     className="btn btn-sm btn-danger"
                     onClick={() => setParticipantFileData([])}
                   >
-                    <Trash2 size={16} /> Delete File
+                    <Icon name="delete" alt="Delete file" sizePx={16} /> Delete File
                   </button>
                 </div>
               )}
@@ -531,7 +592,7 @@ export function ImportAttendance() {
                       onClick={() => setParticipantFileData([])}
                       title="Delete and remove this file from preview"
                     >
-                      <Trash2 size={16} /> Delete Preview
+                      <Icon name="delete" alt="Delete preview" sizePx={16} /> Delete Preview
                     </button>
                   </div>
                   <div className="table-wrapper">
@@ -563,7 +624,7 @@ export function ImportAttendance() {
                     onClick={handleImportParticipants}
                     disabled={importingParticipants}
                   >
-                    {importingParticipants ? <><Loader size={16} /> Importing...</> : <><CheckCircle size={16} /> Import Participants</>}
+                    {importingParticipants ? <><Icon name="loader" alt="Importing" sizePx={16} spin /> Importing...</> : <><Icon name="success" alt="Import" sizePx={16} /> Import Participants</>}
                   </button>
                   <button
                     className="btn btn-secondary btn-lg"
@@ -624,13 +685,13 @@ export function ImportAttendance() {
               </label>
               {attendanceFileData.length > 0 && (
                 <div className="file-info">
-                  <span><Check size={16} /> File loaded: {attendanceFileData.length} rows</span>
+                  <span><Icon name="check" alt="File loaded" sizePx={16} /> File loaded: {attendanceFileData.length} rows</span>
                   <button
                     type="button"
                     className="btn btn-sm btn-danger"
                     onClick={() => setAttendanceFileData([])}
                   >
-                    <Trash2 size={16} /> Delete File
+                    <Icon name="delete" alt="Delete file" sizePx={16} /> Delete File
                   </button>
                 </div>
               )}
@@ -647,7 +708,7 @@ export function ImportAttendance() {
                       onClick={() => setAttendanceFileData([])}
                       title="Delete and remove this file from preview"
                     >
-                      <Trash2 size={16} /> Delete Preview
+                      <Icon name="delete" alt="Delete preview" sizePx={16} /> Delete Preview
                     </button>
                   </div>
                   <div className="table-wrapper">
@@ -689,7 +750,7 @@ export function ImportAttendance() {
                     onClick={handleImportAttendance}
                     disabled={importingAttendance}
                   >
-                    {importingAttendance ? <><Loader size={16} /> Importing...</> : <><CheckCircle size={16} /> Import Attendance</>}
+                    {importingAttendance ? <><Icon name="loader" alt="Importing" sizePx={16} spin /> Importing...</> : <><Icon name="success" alt="Import attendance" sizePx={16} /> Import Attendance</>}
                   </button>
                   <button
                     className="btn btn-secondary btn-lg"
@@ -753,7 +814,7 @@ export function ImportAttendance() {
               disabled={!selectedEventDelete}
               style={{ flex: 1 }}
             >
-              <Trash2 size={18} /> Delete All Participants
+              <Icon name="delete" alt="Delete participants" sizePx={18} /> Delete All Participants
             </button>
             <button
               className="btn btn-danger btn-lg"
@@ -761,12 +822,12 @@ export function ImportAttendance() {
               disabled={!selectedEventDelete}
               style={{ flex: 1 }}
             >
-              <Trash2 size={18} /> Delete All Attendance
+              <Icon name="delete" alt="Delete attendance" sizePx={18} /> Delete All Attendance
             </button>
           </div>
 
           <div className="alert alert-warning" style={{ marginTop: '30px' }}>
-            <AlertTriangle size={16} style={{ display: 'inline', marginRight: '8px' }} />
+            <Icon name="warning" alt="Warning" sizePx={16} />
             <strong>Warning:</strong> Deleting participants will also remove all their attendance records. Deleting attendance will only remove attendance data.
           </div>
         </div>
@@ -781,7 +842,7 @@ export function ImportAttendance() {
             </div>
             <div className="modal-body">
               <p className="warning-message">
-                <AlertTriangle size={16} style={{ display: 'inline', marginRight: '8px' }} /> 
+                <Icon name="warning" alt="Warning" sizePx={16} /> 
                 You are about to permanently delete ALL {deleteConfirmation.type === 'participant' ? 'participants' : 'attendance records'} for this event.
                 {deleteConfirmation.type === 'participant' && ' This will also delete all associated attendance records.'}
                 <br /><br />

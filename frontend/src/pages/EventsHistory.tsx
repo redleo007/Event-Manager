@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BarChart3, CheckCircle, XCircle } from 'lucide-react';
+import Icon from '../components/Icon';
 import { eventsAPI, attendanceAPI } from '../api/client';
 import { useAsync } from '../utils/hooks';
 import { formatDate, formatDateTime } from '../utils/formatters';
@@ -226,21 +226,21 @@ export function EventsHistory() {
               {/* Stats Cards */}
               <div className="stats-section">
                 <div className="stat-card">
-                  <div className="stat-icon"><BarChart3 size={40} /></div>
+                  <div className="stat-icon"><Icon name="chart" alt="Total" sizePx={40} /></div>
                   <div className="stat-content">
                     <span className="stat-label">Total Attendance</span>
                     <span className="stat-value">{stats.total}</span>
                   </div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-icon"><CheckCircle size={40} /></div>
+                  <div className="stat-icon"><Icon name="success" alt="Confirmed" sizePx={40} /></div>
                   <div className="stat-content">
                     <span className="stat-label">Confirmed</span>
                     <span className="stat-value">{stats.attended}</span>
                   </div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-icon"><XCircle size={40} /></div>
+                  <div className="stat-icon"><Icon name="error" alt="No shows" sizePx={40} /></div>
                   <div className="stat-content">
                     <span className="stat-label">No-Shows</span>
                     <span className="stat-value">{stats.noShow}</span>

@@ -7,6 +7,48 @@ import { syncAutoBlocklist } from '../services/blocklistService';
 const router = Router();
 
 /**
+ * Bulk import attendance records
+ * Supports both /bulk-import and /bulk-import-batch for backward compatibility
+ */
+router.post(
+  '/bulk-import-batch',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { records, import_session_id } = req.body;
+
+    if (!Array.isArray(records) || records.length === 0) {
+      return res.status(400).json({ error: 'records array is required and must not be empty' });
+    }
+
+    const result = await attendanceService.bulkImportAttendance(records, import_session_id);
+
+    if (result.hadNoShows) {
+      await syncAutoBlocklist();
+    }
+
+    res.status(201).json(successResponse(result));
+  })
+);
+
+router.post(
+  '/bulk-import',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { records, import_session_id } = req.body;
+
+    if (!Array.isArray(records) || records.length === 0) {
+      return res.status(400).json({ error: 'records array is required and must not be empty' });
+    }
+
+    const result = await attendanceService.bulkImportAttendance(records, import_session_id);
+
+    if (result.hadNoShows) {
+      await syncAutoBlocklist();
+    }
+
+    res.status(201).json(successResponse(result));
+  })
+);
+
+/**
  * Mark attendance for a participant at an event
  */
 router.post(
@@ -78,6 +120,15 @@ router.get(
  */
 router.get(
   '/stats',
+  asyncHandler(async (_req: Request, res: Response) => {
+    const stats = await attendanceService.getNoShowStats();
+    res.json(successResponse(stats));
+  })
+);
+
+// Backward/forward compatible stats endpoint used by some front-ends
+router.get(
+  '/stats/overview',
   asyncHandler(async (_req: Request, res: Response) => {
     const stats = await attendanceService.getNoShowStats();
     res.json(successResponse(stats));

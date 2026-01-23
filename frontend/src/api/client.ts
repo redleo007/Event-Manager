@@ -1,7 +1,29 @@
 import axios from 'axios';
 
-// Use environment variable or fallback to /api for proxy
-const API_BASE_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api';
+// Build a normalized API base URL with a single /api and no TLS surprises in dev
+const buildBaseUrl = () => {
+  const raw = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+
+  // If not provided, rely on dev proxy (/api)
+  if (!raw) return '/api';
+
+  // Drop trailing slashes
+  let base = raw.replace(/\/+$/, '');
+
+  // Avoid duplicate /api (env should NOT include it)
+  if (base.toLowerCase().endsWith('/api')) {
+    base = base.slice(0, -4);
+  }
+
+  // Local dev safety: if someone sets https://localhost without TLS, downgrade to http
+  if (base.startsWith('https://localhost')) {
+    base = base.replace('https://', 'http://');
+  }
+
+  return `${base}/api`;
+};
+
+const API_BASE_URL = buildBaseUrl();
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -84,6 +106,7 @@ export const settingsAPI = {
 export const dashboardAPI = {
   getStats: () => api.get('/dashboard/stats'),
   getSummary: () => api.get('/dashboard/summary'),
+  getOverview: () => api.get('/dashboard/overview'),
 };
 
 // Error handler

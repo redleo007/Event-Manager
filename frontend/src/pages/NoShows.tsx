@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { XCircle, Download, Plus, Trash2 } from 'lucide-react';
+import Icon from '../components/Icon';
 import { participantsAPI, eventsAPI, attendanceAPI } from '../api/client';
 import { formatDateTime } from '../utils/formatters';
 import './NoShows.css';
@@ -145,7 +145,7 @@ export function NoShows() {
 
   /* ================= NO-SHOW COUNT BY PARTICIPANT ================= */
 
-  const noShowsByParticipant = noShowRecords.reduce<Record<string, number>>(
+  const noShowsByParticipant = filteredRecords.reduce<Record<string, number>>(
     (acc, record) => {
       const id = record.participant_id;
       acc[id] = (acc[id] || 0) + 1;
@@ -153,6 +153,9 @@ export function NoShows() {
     },
     {}
   );
+
+  // Derived counts reflect the currently visible (filtered) rows to avoid mismatches
+  const visibleNoShows = filteredRecords.length;
 
   /* ================= EXPORT CSV ================= */
 
@@ -286,13 +289,13 @@ export function NoShows() {
 
       {/* ===== STATS ===== */}
       <div className="stats-section">
-        <div className="stat-card">
-          <div className="stat-icon">
-            <XCircle size={36} />
+        <div className="stat-card total-card">
+          <div className="stat-icon large">
+            <Icon name="noShows" alt="No-shows" sizePx={40} />
           </div>
-          <div className="stat-content">
+          <div className="stat-content centered">
             <h3>Total No-Shows</h3>
-            <p className="stat-value">{totalNoShows}</p>
+            <p className="stat-value">{visibleNoShows}</p>
           </div>
         </div>
       </div>
@@ -314,13 +317,13 @@ export function NoShows() {
               className="btn btn-primary btn-sm"
               onClick={() => setShowAddForm(!showAddForm)}
             >
-              <Plus size={16} /> Add
+              <Icon name="add" alt="Add" sizePx={16} /> Add
             </button>
             <button
               className="btn btn-secondary btn-sm"
               onClick={handleExportCSV}
             >
-              <Download size={16} /> Export
+              <Icon name="download" alt="Export" sizePx={16} /> Export
             </button>
           </div>
         </div>
@@ -422,7 +425,7 @@ export function NoShows() {
                         className="btn btn-danger btn-sm"
                         onClick={() => handleDeleteNoShow(r.id)}
                       >
-                        <Trash2 size={14} />
+                          <Icon name="delete" alt="Delete" sizePx={14} />
                       </button>
                     </td>
                   </tr>

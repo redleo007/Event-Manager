@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, User, LogOut } from 'lucide-react';
+import { Icon } from './Icon';
 import './Navbar.css';
 
 interface NavbarProps {
@@ -28,7 +28,7 @@ export function Navbar({ onLogout, onSidebarToggle }: NavbarProps) {
           title="Toggle Sidebar"
           aria-label="Toggle navigation sidebar"
         >
-          <Menu size={20} />
+          <Icon name="menu" alt="Menu" />
         </button>
         
         <Link to="/" className="brand-link">
@@ -40,7 +40,7 @@ export function Navbar({ onLogout, onSidebarToggle }: NavbarProps) {
       {/* Right: User Info & Logout */}
       <div className="navbar-right">
         <div className="user-info">
-          <User size={18} className="user-avatar" />
+          <Icon name="user" alt="User" />
           <span className="user-name">{adminUser || 'Admin'}</span>
         </div>
         <button 
@@ -48,7 +48,7 @@ export function Navbar({ onLogout, onSidebarToggle }: NavbarProps) {
           onClick={onLogout}
           title="Logout"
         >
-          <LogOut size={16} />
+          <Icon name="logout" alt="Logout" />
           Logout
         </button>
       </div>

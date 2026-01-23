@@ -21,6 +21,20 @@ export interface NoShowStats {
   byParticipant: { participant_id: string; count: number }[];
 }
 
+export type AttendanceImportRecord = {
+  name?: string;
+  email: string;
+  event_id: string;
+  attendance_status?: string;
+};
+
+const normalizeStatus = (status?: string): 'attended' | 'not_attended' => {
+  if (!status) return 'not_attended';
+  const normalized = status.toLowerCase().trim();
+  if (normalized === 'attended' || normalized === 'yes') return 'attended';
+  return 'not_attended';
+};
+
 /**
  * Get total no-show count (SINGLE QUERY - NO LOOP)
  * No-show = status is 'not_attended'
@@ -147,7 +161,8 @@ export const getAllNoShows = async (): Promise<any[]> => {
 export const markAttendance = async (
   event_id: string,
   participant_id: string,
-  status: 'attended' | 'not_attended'
+  status: 'attended' | 'not_attended',
+  import_session_id?: string
 ): Promise<Attendance> => {
   const supabase = getSupabaseClient();
   
@@ -163,9 +178,14 @@ export const markAttendance = async (
 
   if (existing) {
     // Update existing
+    const updatePayload: Record<string, any> = { status, marked_at: now };
+    if (import_session_id) {
+      updatePayload.import_session_id = import_session_id;
+    }
+
     const { data, error } = await supabase
       .from('attendance')
-      .update({ status, marked_at: now })
+      .update(updatePayload)
       .eq('id', existing.id)
       .select()
       .single();
@@ -173,10 +193,21 @@ export const markAttendance = async (
     if (error) throw new Error(`Failed to update attendance: ${error.message}`);
     return data as Attendance;
   } else {
+    const insertPayload: Record<string, any> = {
+      event_id,
+      participant_id,
+      status,
+      marked_at: now,
+    };
+
+    if (import_session_id) {
+      insertPayload.import_session_id = import_session_id;
+    }
+
     // Create new
     const { data, error } = await supabase
       .from('attendance')
-      .insert([{ event_id, participant_id, status, marked_at: now }])
+      .insert([insertPayload])
       .select()
       .single();
 
@@ -227,4 +258,110 @@ export const getAttendanceByParticipant = async (participantId: string): Promise
 
   if (error) throw new Error(`Failed to fetch attendance: ${error.message}`);
   return (data || []) as Attendance[];
+};
+
+export const bulkImportAttendance = async (
+  records: AttendanceImportRecord[],
+  import_session_id?: string
+): Promise<{ imported: number; createdParticipants: number; hadNoShows: boolean }> => {
+  if (!Array.isArray(records) || records.length === 0) {
+    throw new Error('records array is required and must not be empty');
+  }
+
+  const eventId = records[0]?.event_id?.trim();
+  if (!eventId) {
+    throw new Error('event_id is required on each record');
+  }
+
+  const hasMixedEvents = records.some((r) => (r.event_id || '').trim() !== eventId);
+  if (hasMixedEvents) {
+    throw new Error('All records must belong to the same event');
+  }
+
+  const supabase = getSupabaseClient();
+  const emails = Array.from(
+    new Set(
+      records
+        .map((r) => (r.email || '').toLowerCase().trim())
+        .filter((email) => !!email)
+    )
+  );
+
+  if (emails.length === 0) {
+    throw new Error('All records must include a valid email');
+  }
+
+  const { data: existingParticipants, error: participantFetchError } = await supabase
+    .from('participants')
+    .select('id, email, name')
+    .in('email', emails);
+
+  if (participantFetchError) {
+    throw new Error(`Failed to fetch participants: ${participantFetchError.message}`);
+  }
+
+  const participantByEmail = new Map<string, { id: string; email: string; name?: string }>();
+  (existingParticipants || []).forEach((p: any) => {
+    if (p?.email) {
+      participantByEmail.set(String(p.email).toLowerCase(), p);
+    }
+  });
+
+  const toCreate = emails
+    .filter((email) => !participantByEmail.has(email))
+    .map((email) => {
+      const source = records.find((r) => r.email?.toLowerCase().trim() === email);
+      const fallbackName = email.includes('@') ? email.split('@')[0] : 'Unknown';
+
+      return {
+        name: source?.name?.trim() || fallbackName,
+        email,
+        is_blocklisted: false,
+        import_session_id: import_session_id || null,
+      };
+    });
+
+  let createdParticipants = 0;
+  if (toCreate.length > 0) {
+    const { data: created, error: createError } = await supabase
+      .from('participants')
+      .insert(toCreate)
+      .select();
+
+    if (createError) {
+      throw new Error(`Failed to create participants for attendance import: ${createError.message}`);
+    }
+
+    (created || []).forEach((p: any) => {
+      if (p?.email) {
+        participantByEmail.set(String(p.email).toLowerCase(), p);
+      }
+    });
+    createdParticipants = created?.length || 0;
+  }
+
+  let imported = 0;
+  let hadNoShows = false;
+
+  for (const record of records) {
+    const emailKey = record.email?.toLowerCase().trim();
+    if (!emailKey) {
+      continue;
+    }
+
+    const participant = participantByEmail.get(emailKey);
+    if (!participant) {
+      continue;
+    }
+
+    const status = normalizeStatus(record.attendance_status);
+    if (status === 'not_attended') {
+      hadNoShows = true;
+    }
+
+    await markAttendance(eventId, participant.id, status, import_session_id);
+    imported += 1;
+  }
+
+  return { imported, createdParticipants, hadNoShows };
 };

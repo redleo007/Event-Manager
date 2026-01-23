@@ -1,15 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  Calendar,
-  History,
-  Upload,
-  Ban,
-  AlertCircle,
-  Settings,
-} from 'lucide-react';
 import { Navbar } from './Navbar';
+import { Icon } from './Icon';
 import './Layout.css';
 
 interface NavLink {
@@ -19,13 +11,13 @@ interface NavLink {
 }
 
 const mainNavLinks: NavLink[] = [
-  { path: '/', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-  { path: '/events', label: 'Events', icon: <Calendar size={20} /> },
-  { path: '/import-attendance', label: 'Import & Attendance', icon: <Upload size={20} /> },
-  { path: '/events-history', label: 'Events History', icon: <History size={20} /> },
-  { path: '/no-shows', label: 'No Shows', icon: <AlertCircle size={20} /> },
-  { path: '/blocklist', label: 'Blocklist', icon: <Ban size={20} /> },
-  { path: '/settings', label: 'Settings', icon: <Settings size={20} /> },
+  { path: '/', label: 'Dashboard', icon: <Icon name="dashboard" alt="Dashboard" /> },
+  { path: '/events', label: 'Events', icon: <Icon name="events" alt="Events" /> },
+  { path: '/import-attendance', label: 'Import & Attendance', icon: <Icon name="upload" alt="Import" /> },
+  { path: '/events-history', label: 'Events History', icon: <Icon name="history" alt="History" /> },
+  { path: '/no-shows', label: 'No Shows', icon: <Icon name="noShows" alt="No Shows" /> },
+  { path: '/blocklist', label: 'Blocklist', icon: <Icon name="blocklist" alt="Blocklist" /> },
+  { path: '/settings', label: 'Settings', icon: <Icon name="settings" alt="Settings" /> },
 ];
 
 interface SidebarProps {

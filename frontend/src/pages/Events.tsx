@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Plus, Save, CheckCircle, Edit, Trash2 } from 'lucide-react';
+import Icon from '../components/Icon';
 import { eventsAPI } from '../api/client';
 import { useAsync } from '../utils/hooks';
 import { formatDate } from '../utils/formatters';
@@ -123,7 +123,7 @@ export function Events() {
             if (showForm) handleCancel();
           }}
         >
-          {showForm ? <><X size={16} /> Cancel</> : <><Plus size={16} /> New Event</>}
+          {showForm ? <><Icon name="close" alt="Cancel" sizePx={16} /> Cancel</> : <><Icon name="add" alt="New" sizePx={16} /> New Event</>}
         </button>
       </div>
 
@@ -187,7 +187,7 @@ export function Events() {
 
             <div className="form-actions">
               <button type="submit" className="btn btn-primary btn-lg">
-                {editingId ? <><Save size={18} /> Update Event</> : <><CheckCircle size={18} /> Create Event</>}
+                {editingId ? <><Icon name="save" alt="Update" sizePx={18} /> Update Event</> : <><Icon name="success" alt="Create" sizePx={18} /> Create Event</>}
               </button>
               <button
                 type="button"
@@ -224,13 +224,13 @@ export function Events() {
                     className="btn btn-secondary btn-sm"
                     onClick={() => handleEdit(event)}
                   >
-                    <Edit size={16} /> Edit
+                    <Icon name="edit" alt="Edit" sizePx={16} /> Edit
                   </button>
                   <button
                     className="btn btn-danger btn-sm"
                     onClick={() => handleDelete(event.id)}
                   >
-                    <Trash2 size={16} /> Delete
+                    <Icon name="delete" alt="Delete" sizePx={16} /> Delete
                   </button>
                 </div>
               </div>

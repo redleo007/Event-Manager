@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trash2, Plus, Lock } from "lucide-react";
+import Icon from "../components/Icon";
 import { blocklistAPI } from "../api/client";
 import "./Blocklist.css";
 
@@ -91,7 +91,7 @@ export function Blocklist() {
 
       <div className="blocklist-stat">
         <div className="stat-card">
-          <div className="stat-icon"><Lock size={40} /></div>
+          <div className="stat-icon"><Icon name="lock" alt="Blocklist" sizePx={40} /></div>
           <div className="stat-content">
             <h3>TOTAL BLOCKLISTED</h3>
             <p className="stat-value">{count}</p>
@@ -109,7 +109,7 @@ export function Blocklist() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           <button className="btn btn-secondary btn-sm" onClick={() => setShowAddForm(!showAddForm)}>
-            <Plus size={16} /> Add
+            <Icon name="add" alt="Add" size="sm" /> Add
           </button>
         </div>
 
@@ -138,7 +138,7 @@ export function Blocklist() {
                         onClick={() => handleRemove(entry.participant_id)}
                         title="Remove from blocklist"
                       >
-                        <Trash2 size={16} />
+                        <Icon name="delete" alt="Remove" size="sm" />
                       </button>
                     </td>
                   </tr>
