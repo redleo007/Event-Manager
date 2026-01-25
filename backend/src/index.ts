@@ -1,6 +1,8 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 import { initializeSupabase } from './utils/supabase';
 import { errorHandler, asyncHandler } from './middleware/errorHandler';
 
@@ -16,7 +18,21 @@ import dashboardSummary from './routes/dashboardSummary';
 import noShowsRouter from './routes/noShows';
 import eventParticipantsRouter from './routes/eventParticipants';
 
-dotenv.config();
+// Load environment variables from the nearest available .env file (backend root or repo root)
+const envCandidates = [
+  path.resolve(__dirname, '../.env'),
+  path.resolve(__dirname, '../../.env'),
+  path.resolve(process.cwd(), '.env'),
+];
+
+const envPath = envCandidates.find((candidate) => fs.existsSync(candidate));
+if (envPath) {
+  dotenv.config({ path: envPath });
+  console.log(`[config] Loaded environment from ${envPath}`);
+} else {
+  dotenv.config();
+  console.warn('[config] No .env file found; relying on existing environment variables');
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
