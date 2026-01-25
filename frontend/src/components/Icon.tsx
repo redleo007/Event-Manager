@@ -53,6 +53,10 @@ const ICONS: Record<string, string> = {
     'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="%2300d9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/%3E%3Cpolyline points="7 10 12 15 17 10"/%3E%3Cline x1="12" y1="15" x2="12" y2="3"/%3E%3C/svg%3E',
   chart:
     'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="%2300d9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cline x1="18" y1="20" x2="18" y2="10"/%3E%3Cline x1="12" y1="20" x2="12" y2="4"/%3E%3Cline x1="6" y1="20" x2="6" y2="14"/%3E%3C/svg%3E',
+  calendar:
+    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%2300d9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Crect x="3" y="4" width="18" height="18" rx="2" ry="2"/%3E%3Cline x1="16" y1="2" x2="16" y2="6"/%3E%3Cline x1="8" y1="2" x2="8" y2="6"/%3E%3Cline x1="3" y1="10" x2="21" y2="10"/%3E%3Crect x="7" y="14" width="4" height="4" rx="1"/%3E%3C/svg%3E',
+  mapPin:
+    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="%2300d9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M21 10c0 6-9 12-9 12S3 16 3 10a9 9 0 1 1 18 0z"/%3E%3Ccircle cx="12" cy="10" r="3"/%3E%3C/svg%3E',
   loader:
     'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="%2300d9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M21 12a9 9 0 1 1-9-9"/%3E%3C/svg%3E',
   check:

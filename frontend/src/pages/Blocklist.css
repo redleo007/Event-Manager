@@ -1,6 +1,11 @@
 .blocklist {
   animation: fadeIn 0.5s ease;
 }
+    --accent: var(--neon-cyan);
+    --accent-ghost: rgba(0, 217, 255, 0.08);
+    --danger-gradient: linear-gradient(90deg, #ff4d6d, #ff8c42);
+    --danger-border: rgba(255, 77, 109, 0.55);
+    --danger-shadow: 0 10px 22px rgba(255, 77, 109, 0.35);
 
 .page-header {
   margin-bottom: var(--spacing-xl);
@@ -27,12 +32,6 @@
 
   .page-header h1 {
     font-size: 1.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .page-header {
-    margin-bottom: var(--spacing-md);
   }
 
   .page-header h1 {
@@ -197,7 +196,7 @@
   color: var(--neon-cyan);
 }
 
-.add-form-section form {
+.add-form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: var(--spacing-md);
@@ -212,7 +211,7 @@
   font-weight: 600;
   margin-bottom: var(--spacing-sm);
   display: block;
-  color: var(--neon-cyan);
+  color: var(--accent);
 }
 
 .add-form-section select,
@@ -228,25 +227,25 @@
   color: var(--text-primary);
 }
 
+.add-form-section select,
+.add-form-section textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
 .add-form-section select:focus,
 .add-form-section textarea:focus {
   outline: none;
-  border-color: var(--neon-cyan);
+  border-color: var(--accent);
   box-shadow: 0 0 15px rgba(0, 217, 255, 0.2);
   background: var(--card-bg);
 }
-
-.add-form-section textarea {
-  resize: vertical;
-  min-height: 80px;
-  grid-column: 1 / -1;
-}
-
-.form-actions {
-  grid-column: 1 / -1;
-  display: flex;
-  gap: 12px;
-  margin-top: 10px;
 }
 
 .form-actions .btn {
@@ -347,15 +346,16 @@
   border: 1px solid var(--neon-cyan);
 }
 
-.item-actions {
-  margin-top: 16px;
-  padding-top: 16px;
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  justify-content: flex-end;
 }
-
-.item-actions .btn {
-  display: inline-block;
+.form-actions .btn {
+  flex: 1;
 }
-
 .empty-state {
   text-align: center;
   padding: 60px 20px;

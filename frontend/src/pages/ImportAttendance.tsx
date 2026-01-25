@@ -438,10 +438,10 @@ export function ImportAttendance() {
 
           // Fallback path: resolve participants for the event, then mark individually
           const participantsRes = await eventsAPI.getParticipants(selectedEventAttendance);
-          const participants = Array.isArray(participantsRes?.data) ? participantsRes.data : participantsRes;
+          const participants = Array.isArray(participantsRes?.data) ? participantsRes.data : Array.isArray(participantsRes) ? participantsRes : [];
 
           const emailToId = new Map<string, string>();
-          (participants || []).forEach((p: any) => {
+          participants.forEach((p: any) => {
             if (p?.email && p?.id) {
               emailToId.set(String(p.email).toLowerCase().trim(), p.id);
             }

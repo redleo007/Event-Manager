@@ -17,6 +17,9 @@ router.get(
     const blocklistedParticipants = await getBlocklistCount();
     const noShows = await getNoShowTotal();
 
+    // Disable caching so dashboard stays real-time
+    res.set('Cache-Control', 'no-store');
+
     res.json(successResponse({
       totalEvents: events.length,
       activeParticipants,
@@ -48,6 +51,9 @@ router.get(
     ]);
 
     const blocklistedCount = await getBlocklistCount();
+
+    // Disable caching so dashboard stays real-time
+    res.set('Cache-Control', 'no-store');
 
     res.json(successResponse({
       events: eventCount || 0,
@@ -85,7 +91,7 @@ router.get(
           events (id, name, date)
         `)
         .order('marked_at', { ascending: false })
-        .limit(10),
+        .limit(25),
     ]);
 
     // Latest event by date then creation
@@ -141,6 +147,9 @@ router.get(
 
     const noShowCount = await getNoShowTotal();
     const blocklistedCount = await getBlocklistCount();
+
+    // Disable caching so dashboard stays real-time
+    res.set('Cache-Control', 'no-store');
 
     res.json(successResponse({
       summary: {

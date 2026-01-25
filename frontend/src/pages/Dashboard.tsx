@@ -111,6 +111,15 @@ export function Dashboard() {
   useEffect(() => {
     document.title = "Dashboard - TechNexus Community";
     loadDashboardData();
+
+    // Auto-refresh every 15s to keep overview real-time
+    const timer = setInterval(() => {
+      loadDashboardData(false);
+    }, 15000);
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
   }, []);
 
   /**
@@ -118,8 +127,8 @@ export function Dashboard() {
    * Fetches complete overview with one request
    * Fails gracefully with default data if API is down
    */
-  const loadDashboardData = async () => {
-    setLoading(true);
+  const loadDashboardData = async (showLoader: boolean = true) => {
+    if (showLoader) setLoading(true);
     setError(null);
     
     try {
@@ -135,9 +144,19 @@ export function Dashboard() {
         const overviewRaw = overviewRes.value as any;
         const overview = overviewRaw?.data ?? overviewRaw; // axios interceptor may unwrap to payload already
 
-        const activities = Array.isArray(overview?.recentActivities)
+        const activitiesRaw = Array.isArray(overview?.recentActivities)
           ? overview.recentActivities
           : [];
+
+        // De-duplicate activities by id to avoid double renders if API returns overlaps
+        const seenIds = new Set<string>();
+        const activities = activitiesRaw.filter((item: any) => {
+          const id = String(item?.id ?? '');
+          if (!id) return false;
+          if (seenIds.has(id)) return false;
+          seenIds.add(id);
+          return true;
+        });
 
         const lastEvent = overview?.lastEvent;
 
@@ -205,7 +224,7 @@ export function Dashboard() {
       setStats(DEFAULT_STATS);
       setRecentEvent(null);
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   };
 

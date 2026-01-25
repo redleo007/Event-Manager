@@ -159,11 +159,15 @@ export function EventsHistory() {
                   <div className="event-item-header">
                     <h3>{event.name}</h3>
                     <span className="event-date">
+                      <Icon name="calendar" alt="Event date" sizePx={16} />
                       {formatDate(event.date)}
                     </span>
                   </div>
                   {event.location && (
-                    <p className="event-location">{event.location}</p>
+                    <p className="event-location">
+                      <Icon name="mapPin" alt="Location" sizePx={16} />
+                      {event.location}
+                    </p>
                   )}
                 </div>
               ))
@@ -189,9 +193,15 @@ export function EventsHistory() {
                 <div>
                   <h2>{selectedEvent.name}</h2>
                   <p className="event-meta">
-                    <span className="meta-date">{formatDate(selectedEvent.date)}</span>
+                    <span className="meta-date">
+                      <Icon name="calendar" alt="Event date" sizePx={16} />
+                      {formatDate(selectedEvent.date)}
+                    </span>
                     {selectedEvent.location && (
-                      <span className="meta-location">{selectedEvent.location}</span>
+                      <span className="meta-location">
+                        <Icon name="mapPin" alt="Location" sizePx={16} />
+                        {selectedEvent.location}
+                      </span>
                     )}
                   </p>
                   {selectedEvent.description && (

@@ -208,11 +208,17 @@ export function Events() {
               <div key={event.id} className="event-card card">
                 <div className="event-header">
                   <h3>{event.name}</h3>
-                  <span className="event-date">{formatDate(event.date)}</span>
+                  <span className="event-date">
+                    <Icon name="calendar" alt="Event date" sizePx={16} />
+                    {formatDate(event.date)}
+                  </span>
                 </div>
 
                 {event.location && (
-                  <p className="event-location">{event.location}</p>
+                  <p className="event-location">
+                    <Icon name="mapPin" alt="Location" sizePx={16} />
+                    {event.location}
+                  </p>
                 )}
 
                 {event.description && (
