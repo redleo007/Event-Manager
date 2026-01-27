@@ -37,7 +37,8 @@ router.get('/summary', async (req: Request, res: Response) => {
         .select('*', { count: 'exact' }),
       supabase
         .from('participants')
-        .select('*', { count: 'exact' }),
+        .select('*', { count: 'exact' })
+        .eq('is_blocklisted', false),
       supabase
         .from('attendance')
         .select('*', { count: 'exact' })
@@ -135,7 +136,8 @@ router.get('/overview', async (req: Request, res: Response) => {
         .select('*', { count: 'exact' }),
       supabase
         .from('participants')
-        .select('*', { count: 'exact' }),
+        .select('*', { count: 'exact' })
+        .eq('is_blocklisted', false),
       supabase
         .from('attendance')
         .select(`

@@ -182,7 +182,10 @@ export const getBlocklistedParticipantsCount = async (): Promise<number> => {
 
 /**
  * Bulk import participants with deduplication for an event
- * Prevents duplicate inserts based on email matching
+ * Rules:
+ * - Requires email per participant (unique identifier)
+ * - Only creates participants (no attendance side effects)
+ * - Re-uploads of the same file do NOT change counts
  */
 export const bulkCreateParticipantsWithEventDedup = async (
   participantsData: Array<{ full_name: string; email?: string; event_id: string }>,
@@ -190,78 +193,56 @@ export const bulkCreateParticipantsWithEventDedup = async (
 ): Promise<{ created: Participant[]; duplicates: number }> => {
   const supabase = getSupabaseClient();
 
-  const created: Participant[] = [];
-  let duplicateCount = 0;
+  // Enforce unique identifier (email) up front
+  const normalized = participantsData.map((p) => ({
+    full_name: p.full_name?.trim(),
+    email: p.email?.toLowerCase().trim(),
+    event_id: p.event_id,
+  }));
 
-  // Process each participant
-  for (const participantData of participantsData) {
-    const email = participantData.email?.trim();
-    const fullName = participantData.full_name?.trim();
-
-    // Check for existing participant by email or name
-    let existingParticipant = null;
-
-    if (email) {
-      const { data } = await supabase
-        .from('participants')
-        .select('id, name, email')
-        .eq('email', email)
-        .single();
-      existingParticipant = data;
-    } else if (fullName) {
-      const { data } = await supabase
-        .from('participants')
-        .select('id, name, email')
-        .eq('name', fullName)
-        .single();
-      existingParticipant = data;
-    }
-
-    if (existingParticipant) {
-      duplicateCount++;
-      // Check if attendance record already exists for this event
-      const { data: existingAttendance } = await supabase
-        .from('attendance')
-        .select('id')
-        .eq('participant_id', existingParticipant.id)
-        .eq('event_id', participantData.event_id)
-        .single();
-
-      if (!existingAttendance) {
-        // Create attendance record for existing participant
-        await supabase.from('attendance').insert({
-          event_id: participantData.event_id,
-          participant_id: existingParticipant.id,
-          status: 'not_attended',
-          import_session_id: import_session_id || null,
-        });
-      }
-    } else {
-      // Create new participant
-      const { data: newParticipant, error: insertError } = await supabase
-        .from('participants')
-        .insert({
-          name: fullName,
-          email: email || `${Date.now()}_${Math.random().toString(36).substr(2, 9)}@eventpass.local`,
-          is_blocklisted: false,
-          import_session_id: import_session_id || null,
-        })
-        .select()
-        .single();
-
-      if (insertError) throw new Error(`Failed to create participant: ${insertError.message}`);
-
-      // Create attendance record
-      await supabase.from('attendance').insert({
-        event_id: participantData.event_id,
-        participant_id: newParticipant.id,
-        status: 'not_attended',
-        import_session_id: import_session_id || null,
-      });
-
-      created.push(newParticipant as Participant);
-    }
+  const invalid = normalized.filter((p) => !p.email);
+  if (invalid.length > 0) {
+    throw new Error('All participants must include email for import');
   }
 
-  return { created, duplicates: duplicateCount };
+  const emails = Array.from(new Set(normalized.map((p) => p.email as string)));
+
+  // Fetch existing participants in a single query
+  const { data: existing, error: existingError } = await supabase
+    .from('participants')
+    .select('id, email')
+    .in('email', emails);
+
+  if (existingError) {
+    throw new Error(`Failed to fetch participants for dedup: ${existingError.message}`);
+  }
+
+  const existingEmails = new Set<string>((existing || []).map((p: any) => String(p.email).toLowerCase()));
+
+  const toInsert = normalized
+    .filter((p) => !existingEmails.has(p.email as string))
+    .map((p) => ({
+      name: p.full_name || p.email?.split('@')[0] || 'Unknown',
+      email: p.email,
+      is_blocklisted: false,
+      import_session_id: import_session_id || null,
+    }));
+
+  let created: Participant[] = [];
+  if (toInsert.length > 0) {
+    const { data: inserted, error: insertError } = await supabase
+      .from('participants')
+      .insert(toInsert)
+      .select();
+
+    if (insertError) {
+      throw new Error(`Failed to create participants: ${insertError.message}`);
+    }
+
+    created = (inserted || []) as Participant[];
+  }
+
+  const duplicates = emails.length - toInsert.length;
+
+  return { created, duplicates };
 };

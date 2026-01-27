@@ -38,7 +38,7 @@ interface Event {
 export function NoShows() {
   const [noShowRecords, setNoShowRecords] = useState<NoShowRecord[]>([]);
   const [filteredRecords, setFilteredRecords] = useState<NoShowRecord[]>([]);
-  const [totalNoShows, setTotalNoShows] = useState(0);
+  // Aggregate total currently unused in UI; remove state to avoid unused warnings
 
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -94,20 +94,16 @@ export function NoShows() {
       const payload = await attendanceAPI.getNoShows();
 
       let records: NoShowRecord[] = [];
-      let total = 0;
 
       // ✅ Handles both DEV + PROD responses
       if (Array.isArray(payload)) {
         records = payload;
-        total = payload.length;
       } else if (Array.isArray(payload?.data)) {
         records = payload.data;
-        total = payload.total ?? payload.data.length;
       }
 
       setNoShowRecords(records);
       setFilteredRecords(records);
-      setTotalNoShows(total);
     } catch (error) {
       console.error('Failed to load no-shows:', error);
       setMessage({
@@ -119,7 +115,6 @@ export function NoShows() {
       });
       setNoShowRecords([]);
       setFilteredRecords([]);
-      setTotalNoShows(0);
     } finally {
       setLoading(false);
     }

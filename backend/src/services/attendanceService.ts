@@ -165,6 +165,17 @@ export const markAttendance = async (
   import_session_id?: string
 ): Promise<Attendance> => {
   const supabase = getSupabaseClient();
+
+  // Enforce blocklist: participants on blocklist cannot be marked for attendance
+  const { data: participant } = await supabase
+    .from('participants')
+    .select('is_blocklisted')
+    .eq('id', participant_id)
+    .single();
+
+  if (participant?.is_blocklisted) {
+    throw new Error('Participant is blocklisted and cannot be marked for attendance');
+  }
   
   // Check if exists - single query
   const { data: existing } = await supabase
@@ -293,52 +304,27 @@ export const bulkImportAttendance = async (
 
   const { data: existingParticipants, error: participantFetchError } = await supabase
     .from('participants')
-    .select('id, email, name')
+    .select('id, email, name, is_blocklisted')
     .in('email', emails);
 
   if (participantFetchError) {
     throw new Error(`Failed to fetch participants: ${participantFetchError.message}`);
   }
 
-  const participantByEmail = new Map<string, { id: string; email: string; name?: string }>();
+  const participantByEmail = new Map<string, { id: string; email: string; name?: string; is_blocklisted?: boolean }>();
   (existingParticipants || []).forEach((p: any) => {
     if (p?.email) {
       participantByEmail.set(String(p.email).toLowerCase(), p);
     }
   });
 
-  const toCreate = emails
-    .filter((email) => !participantByEmail.has(email))
-    .map((email) => {
-      const source = records.find((r) => r.email?.toLowerCase().trim() === email);
-      const fallbackName = email.includes('@') ? email.split('@')[0] : 'Unknown';
-
-      return {
-        name: source?.name?.trim() || fallbackName,
-        email,
-        is_blocklisted: false,
-        import_session_id: import_session_id || null,
-      };
-    });
-
-  let createdParticipants = 0;
-  if (toCreate.length > 0) {
-    const { data: created, error: createError } = await supabase
-      .from('participants')
-      .insert(toCreate)
-      .select();
-
-    if (createError) {
-      throw new Error(`Failed to create participants for attendance import: ${createError.message}`);
-    }
-
-    (created || []).forEach((p: any) => {
-      if (p?.email) {
-        participantByEmail.set(String(p.email).toLowerCase(), p);
-      }
-    });
-    createdParticipants = created?.length || 0;
+  // Attendance imports must NEVER create participants
+  const missingEmails = emails.filter((email) => !participantByEmail.has(email));
+  if (missingEmails.length > 0) {
+    throw new Error(`Attendance import failed: participants not found for emails: ${missingEmails.join(', ')}`);
   }
+
+  let createdParticipants = 0; // always 0 by contract (no creation during attendance import)
 
   let imported = 0;
   let hadNoShows = false;
@@ -352,6 +338,10 @@ export const bulkImportAttendance = async (
     const participant = participantByEmail.get(emailKey);
     if (!participant) {
       continue;
+    }
+
+    if (participant.is_blocklisted) {
+      throw new Error(`Attendance import failed: participant ${participant.email} is blocklisted`);
     }
 
     const status = normalizeStatus(record.attendance_status);

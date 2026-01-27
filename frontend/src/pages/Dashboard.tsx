@@ -87,12 +87,18 @@ const mapBackendToDashboard = (response: any): DashboardStats => {
       return DEFAULT_STATS;
     }
 
-    // Map backend fields to dashboard model (PRIMITIVES ONLY)
+    // Support both /dashboard/stats and /dashboard/overview shapes
     const stats: DashboardStats = {
-      totalEvents: safeNumber(data.totalEvents, 0),
-      totalParticipants: safeNumber(data.activeParticipants ?? data.totalParticipants, 0),
-      totalNoShows: safeNumber(data.noShows, 0),
-      totalBlocklisted: safeNumber(data.blocklistedParticipants, 0),
+      totalEvents: safeNumber(data.totalEvents ?? data.events, 0),
+      totalParticipants: safeNumber(
+        data.activeParticipants ?? data.totalParticipants ?? data.participants,
+        0
+      ),
+      totalNoShows: safeNumber(data.noShows ?? data.noShowTotal ?? data.totalNoShows, 0),
+      totalBlocklisted: safeNumber(
+        data.blocklistedParticipants ?? data.blocklisted ?? data.totalBlocklisted,
+        0
+      ),
     };
 
     return stats;
@@ -249,7 +255,7 @@ export function Dashboard() {
         </div>
         <button 
           className="btn btn-secondary btn-sm" 
-          onClick={loadDashboardData}
+          onClick={() => loadDashboardData(true)}
           disabled={loading}
           title={loading ? "Loading..." : "Refresh dashboard data"}
         >
@@ -341,41 +347,18 @@ export function Dashboard() {
                 <span className="value">{recentEvent.stats?.blocklisted ?? 0}</span>
               </div>
             </div>
-            <button className="btn btn-secondary btn-sm" onClick={loadDashboardData} disabled={loading}>
+            <button className="btn btn-secondary btn-sm" onClick={() => loadDashboardData(true)} disabled={loading}>
               <Icon alt="Refresh" name="refresh" /> Refresh
             </button>
           </div>
         ) : (
           <div className="recent-body" style={{ justifyContent: 'space-between' }}>
             <p className="recent-title">No recent activity</p>
-            <button className="btn btn-secondary btn-sm" onClick={loadDashboardData} disabled={loading}>
+            <button className="btn btn-secondary btn-sm" onClick={() => loadDashboardData(true)} disabled={loading}>
               <Icon alt="Refresh" name="refresh" /> Refresh
             </button>
           </div>
         )}
-      </div>
-
-      {/* Quick Access Navigation - Always available */}
-      <div className="quick-actions">
-        <h2>Quick Access</h2>
-        <div className="actions-grid">
-          <a href="/events" className="action-card" title="Go to Events">
-            <div className="action-icon"><Icon alt="Events" name="events" size="lg" /></div>
-            <div className="action-text"><h4>Events</h4></div>
-          </a>
-          <a href="/import-attendance" className="action-card" title="Go to Attendance">
-            <div className="action-icon"><Icon alt="Attendance" name="participants" size="lg" /></div>
-            <div className="action-text"><h4>Attendance</h4></div>
-          </a>
-          <a href="/no-shows" className="action-card" title="Go to No-Shows">
-            <div className="action-icon"><Icon alt="No-Shows" name="noShows" size="lg" /></div>
-            <div className="action-text"><h4>No-Shows</h4></div>
-          </a>
-          <a href="/blocklist" className="action-card" title="Go to Blocklist">
-            <div className="action-icon"><Icon alt="Blocklist" name="blocklist" size="lg" /></div>
-            <div className="action-text"><h4>Blocklist</h4></div>
-          </a>
-        </div>
       </div>
 
       {/* Status Info - Show when error */}

@@ -99,6 +99,17 @@ export const addToBlocklist = async (
     .single();
 
   if (error) throw new Error(`Failed to add to blocklist: ${error.message}`);
+
+  // Keep participants table in sync for fast counts and enforcement
+  const { error: participantUpdateError } = await supabase
+    .from('participants')
+    .update({ is_blocklisted: true, blocklist_reason: reason })
+    .eq('id', participantId);
+
+  if (participantUpdateError) {
+    throw new Error(`Blocklist added but failed to flag participant: ${participantUpdateError.message}`);
+  }
+
   return data as BlocklistEntry;
 };
 
@@ -114,6 +125,16 @@ export const removeFromBlocklist = async (participantId: string): Promise<void> 
     .eq('participant_id', participantId);
 
   if (error) throw new Error(`Failed to remove from blocklist: ${error.message}`);
+
+  // Unflag participant for future participation
+  const { error: participantUpdateError } = await supabase
+    .from('participants')
+    .update({ is_blocklisted: false, blocklist_reason: null })
+    .eq('id', participantId);
+
+  if (participantUpdateError) {
+    throw new Error(`Blocklist removed but failed to unflag participant: ${participantUpdateError.message}`);
+  }
 };
 
 /**
