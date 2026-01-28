@@ -112,10 +112,22 @@
 ================================ */
 .file-upload {
   margin: 30px 0;
+  position: relative;
 }
 
 .file-upload input {
-  display: none;
+  position: absolute !important;
+  inset: 0 auto auto 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
 }
 
 .file-label {
@@ -308,6 +320,32 @@
   .import-actions,
   .delete-actions {
     justify-content: flex-start;
+  }
+}
+
+/* ================================
+   TARGETED TABLET HIDING (769–900)
+================================ */
+@media (min-width: 769px) and (max-width: 900px) {
+  .file-upload {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .file-upload input {
+    position: absolute !important;
+    inset: 0 auto auto 0;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+  }
+
+  .file-label {
+    width: 100%;
+    box-sizing: border-box;
   }
 }
 
