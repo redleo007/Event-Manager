@@ -51,6 +51,8 @@ export function NoShows() {
 
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<NoShowRecord | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   /* ================= LOAD ON MOUNT ================= */
 
@@ -235,11 +237,12 @@ export function NoShows() {
 
   /* ================= DELETE NO-SHOW ================= */
 
-  const handleDeleteNoShow = async (recordId: string) => {
-    if (!confirm('Delete this no-show record?')) return;
+  const handleDeleteNoShow = async () => {
+    if (!deleteTarget) return;
 
+    setDeleting(true);
     try {
-      await attendanceAPI.delete(recordId);
+      await attendanceAPI.delete(deleteTarget.id);
 
       setMessage({
         type: 'success',
@@ -253,6 +256,9 @@ export function NoShows() {
         type: 'error',
         text: 'Failed to delete no-show record',
       });
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
     }
   };
 
@@ -418,9 +424,9 @@ export function NoShows() {
                     <td>
                       <button
                         className="btn btn-danger btn-sm"
-                        onClick={() => handleDeleteNoShow(r.id)}
+                        onClick={() => setDeleteTarget(r)}
                       >
-                          <Icon name="delete" alt="Delete" sizePx={14} />
+                        <Icon name="delete" alt="Delete" sizePx={14} />
                       </button>
                     </td>
                   </tr>
@@ -434,6 +440,34 @@ export function NoShows() {
           </div>
         )}
       </div>
+
+      {deleteTarget && (
+        <div className="confirm-modal-overlay">
+          <div className="confirm-modal">
+            <h3>Delete no-show?</h3>
+            <p>
+              Remove the no-show record for{' '}
+              <strong>{deleteTarget.participants?.name ?? 'this participant'}</strong>?
+            </p>
+            <div className="confirm-actions">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={handleDeleteNoShow}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -22,6 +22,8 @@ export function Blocklist() {
   const [participants, setParticipants] = useState<{ id: string; name: string; email: string }[]>([]);
   const [selectedParticipantId, setSelectedParticipantId] = useState("");
   const [reason, setReason] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name?: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     document.title = "Blocklist - TechNexus Community";
@@ -76,15 +78,20 @@ export function Blocklist() {
     setFilteredData(filtered);
   }, [searchTerm, blocklistData]);
 
-  const handleRemove = async (participantId: string) => {
-    if (!confirm("Remove from blocklist?")) return;
+  const confirmRemove = async () => {
+    if (!deleteTarget) return;
+
+    setDeleting(true);
     try {
-      await blocklistAPI.remove(participantId);
+      await blocklistAPI.remove(deleteTarget.id);
       setMessage({ type: "success", text: "Removed from blocklist" });
       await loadBlocklist();
     } catch (error) {
       console.error("Failed to remove:", error);
       setMessage({ type: "error", text: "Failed to remove from blocklist" });
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
     }
   };
 
@@ -257,7 +264,12 @@ export function Blocklist() {
                     <td>
                       <button
                         className="btn btn-danger btn-sm"
-                        onClick={() => handleRemove(entry.participant_id)}
+                        onClick={() =>
+                          setDeleteTarget({
+                            id: entry.participant_id,
+                            name: entry.participants?.name,
+                          })
+                        }
                         title="Remove from blocklist"
                       >
                         <Icon name="delete" alt="Remove" size="sm" />
@@ -274,6 +286,35 @@ export function Blocklist() {
           </div>
         )}
       </div>
+
+      {deleteTarget && (
+        <div className="confirm-modal-overlay">
+          <div className="confirm-modal">
+            <h3>Remove from blocklist?</h3>
+            <p>
+              Remove{' '}
+              <strong>{deleteTarget.name ?? 'this participant'}</strong> from the
+              blocklist?
+            </p>
+            <div className="confirm-actions">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={confirmRemove}
+                disabled={deleting}
+              >
+                {deleting ? "Removing..." : "Remove"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
