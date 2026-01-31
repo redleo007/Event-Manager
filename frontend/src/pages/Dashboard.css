@@ -1,9 +1,29 @@
 .dashboard {
-  animation: fadeIn 0.5s ease;
+  animation: fadeIn 0.3s ease;
   display: flex;
   flex-direction: column;
   gap: clamp(var(--spacing-lg), 3vw, var(--spacing-2xl));
   padding-bottom: clamp(var(--spacing-xl), 5vw, var(--spacing-3xl));
+}
+
+/* Skeleton loading animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.05) 25%,
+    rgba(0, 217, 255, 0.15) 50%,
+    rgba(0, 217, 255, 0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+  min-width: 60px;
+  min-height: 2.2rem;
 }
 
 @media (max-width: 768px) {

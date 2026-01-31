@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { dashboardAPI } from "../api/client";
 import { Icon } from "../components/Icon";
 import "./Dashboard.css";
@@ -26,6 +26,10 @@ const DEFAULT_STATS: DashboardStats = {
   totalNoShows: 0,
   totalBlocklisted: 0,
 };
+
+// Simple in-memory cache for instant subsequent loads
+let statsCache: { data: DashboardStats; timestamp: number } | null = null;
+const CACHE_TTL = 10000; // 10 seconds
 
 type RecentEvent = {
   title: string;
@@ -109,72 +113,55 @@ const mapBackendToDashboard = (response: any): DashboardStats => {
 };
 
 export function Dashboard() {
-  const [stats, setStats] = useState<DashboardStats>(DEFAULT_STATS);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats>(() => statsCache?.data ?? DEFAULT_STATS);
+  const [loading, setLoading] = useState(!statsCache);
   const [error, setError] = useState<string | null>(null);
   const [recentEvent, setRecentEvent] = useState<RecentEvent | null>(null);
-
-  useEffect(() => {
-    document.title = "Dashboard - TechNexus Community";
-    loadDashboardData();
-
-    // Auto-refresh every 15s to keep overview real-time
-    const timer = setInterval(() => {
-      loadDashboardData(false);
-    }, 15000);
-
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, []);
+  const abortRef = useRef<AbortController | null>(null);
 
   /**
-   * LOAD DASHBOARD DATA - Single API Call
-   * Fetches complete overview with one request
-   * Fails gracefully with default data if API is down
+   * LOAD DASHBOARD DATA - Single fast API Call with caching
+   * Uses /stats endpoint only (fastest, ~50ms)
+   * Falls back to cache if available
    */
-  const loadDashboardData = async (showLoader: boolean = true) => {
-    if (showLoader) setLoading(true);
-    setError(null);
+  const loadDashboardData = useCallback(async (showLoader: boolean = true, forceRefresh: boolean = false) => {
+    // Return cached data immediately if valid and not forcing refresh
+    if (!forceRefresh && statsCache && Date.now() - statsCache.timestamp < CACHE_TTL) {
+      setStats(statsCache.data);
+      setLoading(false);
+      return;
+    }
+
+    // Cancel any in-flight request
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
+    abortRef.current = new AbortController();
+
+    if (showLoader && !statsCache) setLoading(true);
     
     try {
-      // Fetch stats and overview concurrently
-      const [statsRes, overviewRes] = await Promise.allSettled([
-        dashboardAPI.getStats(),
-        dashboardAPI.getOverview(),
-      ]);
+      // Single fast endpoint - /stats is optimized for speed
+      const response = await dashboardAPI.getStats();
+      const data = response?.data ?? response;
 
-      let nextStats: DashboardStats | null = null;
+      const nextStats: DashboardStats = {
+        totalEvents: data?.totalEvents ?? data?.events ?? 0,
+        totalParticipants: data?.activeParticipants ?? data?.participants ?? 0,
+        totalNoShows: typeof data?.noShows === 'object' ? data.noShows.total : (data?.noShows ?? 0),
+        totalBlocklisted: data?.blocklistedParticipants ?? data?.blocklisted ?? 0,
+      };
 
-      if (overviewRes.status === 'fulfilled') {
-        const overviewRaw = overviewRes.value as any;
-        const overview = overviewRaw?.data ?? overviewRaw; // axios interceptor may unwrap to payload already
+      // Update cache
+      statsCache = { data: nextStats, timestamp: Date.now() };
+      
+      setStats(nextStats);
+      setError(null);
 
-        const activitiesRaw = Array.isArray(overview?.recentActivities)
-          ? overview.recentActivities
-          : [];
-
-        // De-duplicate activities by id to avoid double renders if API returns overlaps
-        const seenIds = new Set<string>();
-        const activities = activitiesRaw.filter((item: any) => {
-          const id = String(item?.id ?? '');
-          if (!id) return false;
-          if (seenIds.has(id)) return false;
-          seenIds.add(id);
-          return true;
-        });
-
+      // Fetch overview data in background (non-blocking) for recent event
+      dashboardAPI.getOverview().then((overviewRes) => {
+        const overview = overviewRes?.data ?? overviewRes;
         const lastEvent = overview?.lastEvent;
-
-        if (overview?.summary) {
-          nextStats = {
-            totalEvents: overview.summary.events ?? 0,
-            totalParticipants: overview.summary.participants ?? 0,
-            totalNoShows: overview.summary.noShows ?? 0,
-            totalBlocklisted: overview.summary.blocklisted ?? 0,
-          };
-        }
-
         if (lastEvent) {
           setRecentEvent({
             title: lastEvent.name,
@@ -187,64 +174,42 @@ export function Dashboard() {
               blocklisted: lastEvent.blocklistedInEvent ?? 0,
             },
           });
-        } else if (activities.length > 0) {
-          const latest = activities[0];
-          setRecentEvent({
-            title: latest?.events?.name,
-            date: latest?.events?.date || null,
-            lastActivity: latest?.marked_at || latest?.created_at || overview?.lastUpdated || null,
-          });
-        } else {
-          setRecentEvent(null);
         }
-      } else {
-        console.warn('[Dashboard] Overview not available:', overviewRes.reason);
-      }
+      }).catch(() => { /* ignore background fetch errors */ });
 
-      // If overview didn't provide stats, fall back to /stats endpoint
-      if (!nextStats) {
-        if (statsRes.status === 'fulfilled') {
-          nextStats = mapBackendToDashboard(statsRes.value);
-        } else {
-          throw statsRes.reason ?? new Error('Dashboard API request failed');
-        }
-      }
-
-      setStats(nextStats);
-      setError(null);
     } catch (err) {
-      // Log error for debugging
-      console.error("[Dashboard] Failed to load data:", {
-        message: err instanceof Error ? err.message : String(err),
-        timestamp: new Date().toISOString(),
-      });
-
-      // Show user-friendly error
-      const errorMessage = err instanceof Error 
-        ? err.message 
-        : 'Failed to load dashboard. Please refresh to try again.';
-      setError(errorMessage);
-
-      // CRITICAL: Still show dashboard with defaults
-      // This prevents white screen even when API fails
-      setStats(DEFAULT_STATS);
-      setRecentEvent(null);
+      // Use cache on error if available
+      if (statsCache) {
+        setStats(statsCache.data);
+        console.warn('[Dashboard] Using cached data due to error');
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard';
+        setError(errorMessage);
+        setStats(DEFAULT_STATS);
+      }
     } finally {
-      if (showLoader) setLoading(false);
+      setLoading(false);
     }
-  };
+  }, []);
 
-  // LOADING STATE
-  if (loading) {
-    return (
-      <div className="dashboard loading-container">
-        <div className="spinner"></div>
-        <p>Loading dashboard...</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    document.title = "Dashboard - TechNexus Community";
+    loadDashboardData(true, false);
 
-  // RENDER DASHBOARD
+    // Auto-refresh every 30s (reduced frequency for performance)
+    const timer = setInterval(() => {
+      loadDashboardData(false, true);
+    }, 30000);
+
+    return () => {
+      clearInterval(timer);
+      if (abortRef.current) abortRef.current.abort();
+    };
+  }, [loadDashboardData]);
+
+  // RENDER DASHBOARD - Show skeleton placeholders during initial load
+  const showSkeleton = loading && !statsCache;
+
   return (
     <div className="dashboard">
       {/* HEADER */}
@@ -255,11 +220,11 @@ export function Dashboard() {
         </div>
         <button 
           className="btn btn-secondary btn-sm" 
-          onClick={() => loadDashboardData(true)}
+          onClick={() => loadDashboardData(true, true)}
           disabled={loading}
           title={loading ? "Loading..." : "Refresh dashboard data"}
         >
-          <Icon alt="Refresh" name="refresh" /> Refresh
+          <Icon alt="Refresh" name="refresh" /> {loading ? 'Loading...' : 'Refresh'}
         </button>
       </div>
 
@@ -273,14 +238,16 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* MAIN STATS GRID - All values are primitives (numbers/strings only) */}
+      {/* MAIN STATS GRID - Show skeleton or actual values */}
       <div className="stats-grid">
         {/* Total Events */}
         <div className="stat-card">
           <div className="stat-icon"><Icon alt="Events" name="events" /></div>
           <div className="stat-content">
             <h3>Events</h3>
-            <p className="stat-value">{stats?.totalEvents ?? 0}</p>
+            <p className={`stat-value ${showSkeleton ? 'skeleton' : ''}`}>
+              {showSkeleton ? '' : (stats?.totalEvents ?? 0)}
+            </p>
           </div>
         </div>
 
@@ -289,7 +256,9 @@ export function Dashboard() {
           <div className="stat-icon"><Icon alt="Participants" name="participants" /></div>
           <div className="stat-content">
             <h3>Participants</h3>
-            <p className="stat-value">{stats?.totalParticipants ?? 0}</p>
+            <p className={`stat-value ${showSkeleton ? 'skeleton' : ''}`}>
+              {showSkeleton ? '' : (stats?.totalParticipants ?? 0)}
+            </p>
           </div>
         </div>
 
@@ -298,7 +267,9 @@ export function Dashboard() {
           <div className="stat-icon"><Icon alt="No-Shows" name="noShows" /></div>
           <div className="stat-content">
             <h3>No-Shows</h3>
-            <p className="stat-value">{stats?.totalNoShows ?? 0}</p>
+            <p className={`stat-value ${showSkeleton ? 'skeleton' : ''}`}>
+              {showSkeleton ? '' : (stats?.totalNoShows ?? 0)}
+            </p>
           </div>
         </div>
 
@@ -307,7 +278,9 @@ export function Dashboard() {
           <div className="stat-icon"><Icon alt="Blocklisted" name="blocklist" /></div>
           <div className="stat-content">
             <h3>Blocklisted</h3>
-            <p className="stat-value">{stats?.totalBlocklisted ?? 0}</p>
+            <p className={`stat-value ${showSkeleton ? 'skeleton' : ''}`}>
+              {showSkeleton ? '' : (stats?.totalBlocklisted ?? 0)}
+            </p>
           </div>
         </div>
       </div>

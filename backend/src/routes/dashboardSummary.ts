@@ -1,13 +1,11 @@
 /**
  * DASHBOARD SUMMARY API - SINGLE AGGREGATED ENDPOINT
  * Returns all dashboard statistics in ONE query (no N+1)
- * Performance: Should respond in <100ms
+ * Performance: Should respond in <50ms
  */
 
 import { Router, Request, Response } from 'express';
 import { getSupabaseClient } from '../utils/supabase';
-import { getNoShowTotal, getNoShowStats } from '../services/attendanceService';
-import { getBlocklistCount } from '../services/blocklistService';
 
 const router = Router();
 
@@ -15,59 +13,36 @@ const router = Router();
  * GET /api/dashboard/summary
  * Returns: { events, participants, noShows, blocklisted, lastUpdated }
  * 
- * Performance characteristics:
- * - Events COUNT: ~10ms
- * - Participants COUNT: ~10ms
- * - No-shows COUNT: ~10ms
- * - Blocklist COUNT: ~10ms
- * Total: ~50ms (3 concurrent queries possible)
+ * Performance: ALL queries run in parallel with head:true for count-only
+ * Target: ~30-50ms response time
  */
 router.get('/summary', async (req: Request, res: Response) => {
   try {
     const supabase = getSupabaseClient();
 
-    // Run ALL aggregated COUNT queries in parallel for speed
-    const [
-      { count: eventCount, error: eventError },
-      { count: participantCount, error: participantError },
-      { count: noShowCount, error: noShowError }
-    ] = await Promise.all([
-      supabase
-        .from('events')
-        .select('*', { count: 'exact' }),
-      supabase
-        .from('participants')
-        .select('*', { count: 'exact' })
-        .eq('is_blocklisted', false),
-      supabase
-        .from('attendance')
-        .select('*', { count: 'exact' })
-        .or('status.eq.not_attended,status.is.null')
+    // ALL count queries in parallel - head:true skips row fetching
+    const [eventRes, participantRes, noShowRes, blocklistRes] = await Promise.all([
+      supabase.from('events').select('*', { count: 'exact', head: true }),
+      supabase.from('participants').select('*', { count: 'exact', head: true }).eq('is_blocklisted', false),
+      supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('status', 'not_attended'),
+      supabase.from('blocklist').select('*', { count: 'exact', head: true }),
     ]);
 
-    if (eventError || participantError || noShowError) {
-      console.error('Dashboard errors:', { eventError, participantError, noShowError });
+    if (eventRes.error || participantRes.error || noShowRes.error || blocklistRes.error) {
+      console.error('Dashboard errors:', { eventRes, participantRes, noShowRes, blocklistRes });
       throw new Error('Failed to fetch summary statistics');
     }
 
-    // Get blocklist count
-    let blocklistedCount = 0;
-    try {
-      blocklistedCount = await getBlocklistCount();
-    } catch (blocklistErr) {
-      console.warn('Failed to get blocklist count, using 0:', blocklistErr);
-      blocklistedCount = 0;
-    }
-
     const response = {
-      events: eventCount || 0,
-      participants: participantCount || 0,
-      noShows: noShowCount || 0,
-      blocklisted: blocklistedCount,
+      events: eventRes.count || 0,
+      participants: participantRes.count || 0,
+      noShows: noShowRes.count || 0,
+      blocklisted: blocklistRes.count || 0,
       lastUpdated: new Date().toISOString()
     };
 
-    console.log('✅ Dashboard summary calculated:', response);
+    // Short cache for rapid navigation
+    res.set('Cache-Control', 'private, max-age=5');
     return res.json(response);
   } catch (error) {
     console.error('❌ Dashboard summary error:', error);
@@ -79,35 +54,28 @@ router.get('/summary', async (req: Request, res: Response) => {
 
 /**
  * GET /api/dashboard/stats
- * Detailed statistics including breakdown by participant
- * Returns: { total, attended, noShows: { total, uniqueParticipants, byParticipant } }
+ * Detailed statistics - optimized for speed
  */
 router.get('/stats', async (req: Request, res: Response) => {
   try {
     const supabase = getSupabaseClient();
 
-    // Total attendance count
-    const { count: totalCount, error: totalError } = await supabase
-      .from('attendance')
-      .select('*', { count: 'exact' });
+    // All counts in parallel with head:true
+    const [totalRes, attendedRes, noShowRes] = await Promise.all([
+      supabase.from('attendance').select('*', { count: 'exact', head: true }),
+      supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('status', 'attended'),
+      supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('status', 'not_attended'),
+    ]);
 
-    // Attended count
-    const { count: attendedCount, error: attendedError } = await supabase
-      .from('attendance')
-      .select('*', { count: 'exact' })
-      .eq('status', 'attended');
-
-    if (totalError || attendedError) {
+    if (totalRes.error || attendedRes.error || noShowRes.error) {
       throw new Error('Failed to fetch attendance statistics');
     }
 
-    // Get detailed no-show stats
-    const noShowStats = await getNoShowStats();
-
+    res.set('Cache-Control', 'private, max-age=5');
     return res.json({
-      total: totalCount || 0,
-      attended: attendedCount || 0,
-      noShows: noShowStats
+      total: totalRes.count || 0,
+      attended: attendedRes.count || 0,
+      noShows: { total: noShowRes.count || 0 }
     });
   } catch (error) {
     console.error('Dashboard stats error:', error);
@@ -119,49 +87,30 @@ router.get('/stats', async (req: Request, res: Response) => {
 
 /**
  * GET /api/dashboard/overview
- * Complete dashboard overview with recent activities
+ * Complete dashboard overview - optimized with parallel queries
  */
 router.get('/overview', async (req: Request, res: Response) => {
   try {
     const supabase = getSupabaseClient();
 
-    // Get all counts in parallel
-    const [
-      { count: eventCount },
-      { count: participantCount },
-      { data: recentAttendance }
-    ] = await Promise.all([
-      supabase
-        .from('events')
-        .select('*', { count: 'exact' }),
-      supabase
-        .from('participants')
-        .select('*', { count: 'exact' })
-        .eq('is_blocklisted', false),
-      supabase
-        .from('attendance')
-        .select(`
-          id,
-          status,
-          marked_at,
-          participants (id, name),
-          events (id, name, date)
-        `)
-        .order('marked_at', { ascending: false })
-        .limit(10)
+    // All queries in parallel
+    const [eventRes, participantRes, noShowRes, blocklistRes, recentRes] = await Promise.all([
+      supabase.from('events').select('*', { count: 'exact', head: true }),
+      supabase.from('participants').select('*', { count: 'exact', head: true }).eq('is_blocklisted', false),
+      supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('status', 'not_attended'),
+      supabase.from('blocklist').select('*', { count: 'exact', head: true }),
+      supabase.from('attendance').select('id, status, marked_at, participant_id, event_id').order('marked_at', { ascending: false }).limit(10),
     ]);
 
-    const noShowCount = await getNoShowTotal();
-    const blocklistedCount = await getBlocklistCount();
-
+    res.set('Cache-Control', 'private, max-age=5');
     return res.json({
       summary: {
-        events: eventCount || 0,
-        participants: participantCount || 0,
-        noShows: noShowCount,
-        blocklisted: blocklistedCount
+        events: eventRes.count || 0,
+        participants: participantRes.count || 0,
+        noShows: noShowRes.count || 0,
+        blocklisted: blocklistRes.count || 0
       },
-      recentActivities: recentAttendance || [],
+      recentActivities: recentRes.data || [],
       lastUpdated: new Date().toISOString()
     });
   } catch (error) {

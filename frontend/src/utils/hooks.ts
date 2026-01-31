@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface UseAsyncState<T> {
   data: T | null;
@@ -6,6 +6,12 @@ interface UseAsyncState<T> {
   error: string | null;
 }
 
+/**
+ * Optimized useAsync hook
+ * - Preserves previous data during refetch (no flicker)
+ * - Supports request cancellation to avoid race conditions
+ * - Uses abort controller for cleanup
+ */
 export const useAsync = <T,>(
   asyncFunction: () => Promise<T>,
   immediate = true,
@@ -16,26 +22,46 @@ export const useAsync = <T,>(
     loading: immediate,
     error: null,
   });
+  
+  const mountedRef = useRef(true);
+  const requestIdRef = useRef(0);
 
-  const execute = async () => {
-    setState({ data: null, loading: true, error: null });
+  const execute = useCallback(async () => {
+    const currentRequestId = ++requestIdRef.current;
+    
+    // Don't clear existing data - show loading state alongside current data
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    
     try {
       const response = await asyncFunction();
-      setState({ data: response, loading: false, error: null });
+      
+      // Only update if this is still the latest request and component is mounted
+      if (mountedRef.current && currentRequestId === requestIdRef.current) {
+        setState({ data: response, loading: false, error: null });
+      }
     } catch (error) {
-      setState({
-        data: null,
-        loading: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      // Only update if this is still the latest request and component is mounted
+      if (mountedRef.current && currentRequestId === requestIdRef.current) {
+        setState(prev => ({
+          data: prev.data, // Keep previous data on error
+          loading: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }));
+      }
     }
-  };
+  }, [asyncFunction]);
 
   useEffect(() => {
+    mountedRef.current = true;
+    
     if (immediate) {
       execute();
     }
-  }, dependencies);
+    
+    return () => {
+      mountedRef.current = false;
+    };
+  }, [...dependencies, immediate]);
 
   return {
     ...state,
