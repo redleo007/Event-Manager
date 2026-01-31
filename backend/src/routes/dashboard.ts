@@ -98,21 +98,21 @@ router.get(
 
     // Only fetch event-specific stats if we have a latest event
     if (latestEvent?.id) {
-      const [attendanceRes, eventNoShowRes] = await Promise.all([
-        supabase.from('attendance').select('participant_id', { count: 'exact' }).eq('event_id', latestEvent.id),
+      const [attendedRes, eventNoShowRes, participantCountRes] = await Promise.all([
+        // Count only those who actually attended (status = 'attended')
+        supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('event_id', latestEvent.id).eq('status', 'attended'),
         supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('event_id', latestEvent.id).eq('status', 'not_attended'),
+        // Count total participants registered for this event
+        supabase.from('participants').select('*', { count: 'exact', head: true }).eq('event_id', latestEvent.id),
       ]);
-
-      const attendeeRows = attendanceRes.data || [];
-      const uniqueParticipants = new Set(attendeeRows.map((r: any) => r.participant_id));
 
       lastEventStats = {
         id: latestEvent.id,
         name: latestEvent.name,
         date: latestEvent.date || null,
-        attendanceCount: attendanceRes.count || 0,
+        attendanceCount: attendedRes.count || 0,  // Only 'attended' status
         noShowCount: eventNoShowRes.count || 0,
-        participantCount: uniqueParticipants.size,
+        participantCount: participantCountRes.count || 0,
         blocklistedInEvent: 0, // Skip expensive join for speed
       };
     }

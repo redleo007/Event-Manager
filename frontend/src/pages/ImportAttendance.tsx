@@ -8,6 +8,7 @@ import './ImportAttendance.css';
 
 interface ParsedParticipant {
   name: string;
+  email?: string;
   eventPass?: string;
 }
 
@@ -72,8 +73,13 @@ export function ImportAttendance() {
     for (const key in row) {
       const normalizedKey = normalizeColumnName(key);
       
-      if (normalizedKey.includes('name') && !normalizedKey.includes('event')) {
+      // Match name/Name/Full Name/full_name columns (but not event_name)
+      if ((normalizedKey.includes('name') || normalizedKey === 'full_name') && !normalizedKey.includes('event')) {
         mappedRow.name = row[key];
+      // Match email/Email/E-mail/e_mail columns
+      } else if (normalizedKey.includes('email') || normalizedKey === 'e-mail' || normalizedKey === 'e_mail') {
+        mappedRow.email = row[key];
+      // Match Event Pass/event_pass/eventpass/pass/code columns
       } else if (normalizedKey.includes('pass') || normalizedKey.includes('code') || normalizedKey.includes('event_pass') || normalizedKey.includes('eventpass')) {
         mappedRow.eventPass = row[key];
       }
@@ -347,6 +353,8 @@ export function ImportAttendance() {
       const payload = {
         participants: participantFileData.map(row => ({
           full_name: row.name.trim(),
+          email: row.email?.trim() || undefined,
+          event_pass: row.eventPass?.trim() || undefined,
           event_id: selectedEventParticipants,
         })),
       };
@@ -537,7 +545,7 @@ export function ImportAttendance() {
             <div className="section-header">
               <div>
                 <h2>Import Participants from CSV</h2>
-                <p className="section-desc">Upload a CSV file with column: full name (required). Event selection is mandatory.</p>
+                <p className="section-desc">Upload a CSV file with columns: Name/Full Name (required), Email (optional), Event Pass (optional). Event selection is mandatory.</p>
               </div>
             </div>
 
@@ -600,6 +608,7 @@ export function ImportAttendance() {
                       <thead>
                         <tr>
                           <th>Full Name</th>
+                          <th>Email</th>
                           <th>Event Pass</th>
                         </tr>
                       </thead>
@@ -607,6 +616,7 @@ export function ImportAttendance() {
                         {participantFileData.slice(0, 5).map((row, idx) => (
                           <tr key={idx} className={isValidParticipantRow(row) ? 'row-valid' : 'row-invalid'}>
                             <td>{row.name}</td>
+                            <td>{row.email || '-'}</td>
                             <td>{row.eventPass || '-'}</td>
                           </tr>
                         ))}
