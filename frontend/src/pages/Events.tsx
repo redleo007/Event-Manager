@@ -17,6 +17,11 @@ interface Event {
 export function Events() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string | null; name: string }>({
+    show: false,
+    id: null,
+    name: '',
+  });
   
   useEffect(() => {
     document.title = 'Events - TechNexus Community';
@@ -79,11 +84,15 @@ export function Events() {
     setShowForm(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this event?')) return;
+  const handleDeleteClick = (event: Event) => {
+    setDeleteConfirm({ show: true, id: event.id, name: event.name });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm.id) return;
 
     try {
-      await eventsAPI.delete(id);
+      await eventsAPI.delete(deleteConfirm.id);
       setMessage({ type: 'success', text: 'Event deleted successfully' });
       refetch();
     } catch (error) {
@@ -91,7 +100,13 @@ export function Events() {
         type: 'error',
         text: error instanceof Error ? error.message : 'Failed to delete event',
       });
+    } finally {
+      setDeleteConfirm({ show: false, id: null, name: '' });
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirm({ show: false, id: null, name: '' });
   };
 
   const handleCancel = () => {
@@ -234,7 +249,7 @@ export function Events() {
                   </button>
                   <button
                     className="btn btn-danger btn-sm"
-                    onClick={() => handleDelete(event.id)}
+                    onClick={() => handleDeleteClick(event)}
                   >
                     <Icon name="delete" alt="Delete" sizePx={16} /> Delete
                   </button>
@@ -248,6 +263,29 @@ export function Events() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm.show && (
+        <div className="modal-overlay" onClick={handleDeleteCancel}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <Icon name="warning" alt="Warning" sizePx={24} />
+              <h3>Delete Event</h3>
+            </div>
+            <p className="modal-body">
+              Are you sure you want to delete <strong>"{deleteConfirm.name}"</strong>? This action cannot be undone.
+            </p>
+            <div className="modal-actions">
+              <button className="btn btn-secondary" onClick={handleDeleteCancel}>
+                Cancel
+              </button>
+              <button className="btn btn-danger" onClick={handleDeleteConfirm}>
+                <Icon name="delete" alt="Delete" sizePx={16} /> Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
