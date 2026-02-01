@@ -73,7 +73,7 @@ export function Dashboard() {
     
     try {
       // Single fast endpoint - /stats is optimized for speed
-      const response = await dashboardAPI.getStats();
+      const response = await dashboardAPI.getStats(forceRefresh);
       const data = response?.data ?? response;
 
       const nextStats: DashboardStats = {
@@ -90,7 +90,7 @@ export function Dashboard() {
       setError(null);
 
       // Fetch overview data in background (non-blocking) for recent event
-      dashboardAPI.getOverview().then((overviewRes) => {
+      dashboardAPI.getOverview(forceRefresh).then((overviewRes) => {
         const overview = overviewRes?.data ?? overviewRes;
         const lastEvent = overview?.lastEvent;
         if (lastEvent) {

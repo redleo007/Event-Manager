@@ -1,4 +1,25 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
+
+// Lightweight client-side response cache to avoid refetching unchanged data
+type CachePolicy = {
+  enabled?: boolean;
+  ttlMs?: number;
+  forceRefresh?: boolean;
+  key?: string;
+};
+
+type CachedConfig = AxiosRequestConfig & { cache?: CachePolicy };
+
+const responseCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+const DEFAULT_CACHE_TTL = 15000; // 15 seconds keeps UI snappy without going stale
+
+const buildCacheKey = (config: CachedConfig) => {
+  const method = (config.method ?? 'get').toUpperCase();
+  const url = config.url ?? '';
+  const params = config.params ? JSON.stringify(config.params) : '';
+  const data = config.data ? JSON.stringify(config.data) : '';
+  return `${method}:${url}?p=${params}&d=${data}`;
+};
 
 // Build a normalized API base URL with a single /api and no TLS surprises in dev
 const buildBaseUrl = () => {
@@ -30,6 +51,37 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Serve cached GET responses when fresh; fall back to network otherwise
+api.interceptors.request.use((config: CachedConfig) => {
+  const method = (config.method ?? 'get').toLowerCase();
+  const cacheConfig = config.cache ?? {};
+  const cacheKey = cacheConfig.key ?? buildCacheKey(config);
+  const ttl = cacheConfig.ttlMs ?? DEFAULT_CACHE_TTL;
+
+  // Persist normalized cache config for response stage
+  (config as CachedConfig).cache = { ...cacheConfig, key: cacheKey, ttlMs: ttl };
+
+  const shouldUseCache = method === 'get' && cacheConfig.enabled !== false && !cacheConfig.forceRefresh;
+
+  if (shouldUseCache) {
+    const cached = cacheKey ? responseCache.get(cacheKey) : null;
+    const isFresh = cached && Date.now() - cached.timestamp < cached.ttl;
+
+    if (cached && isFresh) {
+      config.adapter = async () => ({
+        data: cached.data,
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+        request: {},
+      });
+    }
+  }
+
+  return config;
 });
 
 // Events API
@@ -104,20 +156,41 @@ export const settingsAPI = {
 
 // Dashboard API
 export const dashboardAPI = {
-  getStats: () => api.get('/dashboard/stats'),
-  getSummary: () => api.get('/dashboard/summary'),
-  getOverview: () => api.get('/dashboard/overview'),
+  getStats: (forceRefresh: boolean = false) =>
+    api.get('/dashboard/stats', { cache: { forceRefresh, ttlMs: 12000 } }),
+  getSummary: () => api.get('/dashboard/summary', { cache: { ttlMs: 20000 } }),
+  getOverview: (forceRefresh: boolean = false) =>
+    api.get('/dashboard/overview', { cache: { forceRefresh, ttlMs: 20000 } }),
 };
 
-// Error handler
+// Normalize responses, populate cache for GETs, and clear cache after mutations
 api.interceptors.response.use(
   (response) => {
+    const config = response.config as CachedConfig;
+    const method = (config.method ?? 'get').toLowerCase();
+    const cacheConfig = config.cache ?? {};
+    const cacheKey = cacheConfig.key ?? buildCacheKey(config);
+    const ttl = cacheConfig.ttlMs ?? DEFAULT_CACHE_TTL;
+
     // response.data contains the ApiResponse { success, data, timestamp }
-    // Return the data field for easier access in components
     const responseData = response.data;
+    const normalizedData =
+      responseData && (responseData as any).data !== undefined ? (responseData as any).data : responseData;
+
+    // Write-through cache for GET requests
+    const shouldCache = method === 'get' && cacheConfig.enabled !== false;
+    if (shouldCache && cacheKey) {
+      responseCache.set(cacheKey, { data: normalizedData, timestamp: Date.now(), ttl });
+    }
+
+    // Mutations should invalidate stale GET caches to keep pages current
+    if (method !== 'get') {
+      responseCache.clear();
+    }
+
     return {
       ...response,
-      data: responseData && responseData.data !== undefined ? responseData.data : responseData,
+      data: normalizedData,
     };
   },
   (error) => {
