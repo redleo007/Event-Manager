@@ -24,8 +24,6 @@ interface Event {
   date: string;
 }
 
-
-
 export function ImportAttendance() {
   const [activeTab, setActiveTab] = useState<'participants' | 'attendance' | 'delete'>('participants');
 
@@ -128,6 +126,8 @@ export function ImportAttendance() {
         return 'status-attended';
       case 'no_show':
         return 'status-no-show';
+      default:
+        return 'status-no-show';
     }
   };
 
@@ -136,6 +136,8 @@ export function ImportAttendance() {
       case 'attended':
         return 'Attended';
       case 'no_show':
+        return 'No-Show';
+      default:
         return 'No-Show';
     }
   };
@@ -503,56 +505,65 @@ export function ImportAttendance() {
   };
 
   return (
-    <div className="data-importer-page">
-      <div className="page-header">
+    <div className="data-importer-container">
+      <div className="data-importer-header">
         <h1>Import Data</h1>
-        <p>Bulk import participants and attendance records</p>
+        <p>Bulk import participants and attendance records for your events.</p>
       </div>
 
-      <div className="tabs-container">
-        <div className="tabs">
+      <div className="data-importer-tabs-wrapper">
+        <div className="data-importer-tabs">
           <button
-            className={`tab-button ${activeTab === 'participants' ? 'active' : ''}`}
+            className={`data-importer-tab-btn ${activeTab === 'participants' ? 'active' : ''}`}
             onClick={() => setActiveTab('participants')}
           >
+            <Icon name="users" alt="Participants" sizePx={16} />
             Import Participants
           </button>
           <button
-            className={`tab-button ${activeTab === 'attendance' ? 'active' : ''}`}
+            className={`data-importer-tab-btn ${activeTab === 'attendance' ? 'active' : ''}`}
             onClick={() => setActiveTab('attendance')}
           >
+            <Icon name="check" alt="Attendance" sizePx={16} />
             Import Attendance
           </button>
           <button
-            className={`tab-button ${activeTab === 'delete' ? 'active' : ''}`}
+            className={`data-importer-tab-btn ${activeTab === 'delete' ? 'active' : ''}`}
             onClick={() => setActiveTab('delete')}
           >
+            <Icon name="delete" alt="Delete" sizePx={16} />
             Delete Data
           </button>
         </div>
       </div>
 
-      {/* Participants Tab */}
-      {activeTab === 'participants' && (
-        <div className="tab-content card">
-          {participantMessage && (
-            <div className={`alert alert-${participantMessage.type}`}>
-              {participantMessage.text}
-            </div>
-          )}
+      {/* Content Area */}
+      <div className="data-importer-card">
 
-          <div className="import-section">
-            <div className="section-header">
-              <div>
-                <h2>Import Participants from CSV</h2>
-                <p className="section-desc">Upload a CSV file with columns: Name/Full Name (required), Email (optional), Event Pass (optional). Event selection is mandatory.</p>
+        {/* =========================================
+            PARTICIPANTS TAB content
+           ========================================= */}
+        {activeTab === 'participants' && (
+          <div className="data-importer-tab-content">
+            {participantMessage && (
+              <div className={`data-importer-alert data-importer-alert-${participantMessage.type}`}>
+                <Icon name={participantMessage.type === 'success' ? 'success' : 'warning'} alt="Status" sizePx={20} />
+                <span>{participantMessage.text}</span>
               </div>
+            )}
+
+            <div className="data-importer-section-head">
+              <h2>Import Participants</h2>
+              <p className="data-importer-section-desc">
+                Upload a CSV file containing <strong>Full Name</strong> (required), <strong>Email</strong>, and <strong>Event Pass</strong>.
+              </p>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="event-select-participants">Select Event *</label>
+            <div className="data-importer-form-group">
+              <label htmlFor="participants-event-select" className="data-importer-label">Select Target Event</label>
               <select
-                id="event-select-participants"
+                id="participants-event-select"
+                className="data-importer-select"
                 value={selectedEventParticipants}
                 onChange={(e) => setSelectedEventParticipants(e.target.value)}
               >
@@ -565,112 +576,120 @@ export function ImportAttendance() {
               </select>
             </div>
 
-            <div className="file-upload">
+            <div className="data-importer-upload-zone">
               <input
                 type="file"
+                className="data-importer-file-input"
                 accept=".csv,.xlsx,.xls"
                 onChange={handleParticipantFileSelect}
-                id="csv-file-participants"
+                id="participant-file-upload"
               />
-              <label htmlFor="csv-file-participants" className="file-label">
-                Click to select CSV or Excel file
-              </label>
+              <div className="data-importer-drop-area">
+                <div className="data-importer-icon-upload"></div>
+                <div>
+                  <strong>Click or Drag to Upload</strong>
+                  <div style={{ marginTop: 8, fontSize: '0.85rem', opacity: 0.7 }}>
+                    Supports .CSV, .XLSX, .XLS
+                  </div>
+                </div>
+              </div>
+
               {participantFileData.length > 0 && (
-                <div className="file-info">
-                  <span><Icon name="check" alt="File loaded" sizePx={16} /> File loaded: {participantFileData.length} rows</span>
+                <div className="data-importer-file-status">
+                  <div className="data-importer-file-name">
+                    <Icon name="check" alt="Ready" sizePx={18} />
+                    {participantFileData.length} rows loaded successfully
+                  </div>
                   <button
-                    type="button"
-                    className="btn btn-sm btn-danger"
+                    className="data-importer-delete-file-btn"
                     onClick={() => setParticipantFileData([])}
                   >
-                    <Icon name="delete" alt="Delete file" sizePx={16} /> Delete File
+                    Remove File
                   </button>
                 </div>
               )}
             </div>
 
             {participantFileData.length > 0 && (
-              <>
-                <div className="data-preview-box">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <h3 style={{ margin: 0 }}>Preview ({participantFileData.length} rows)</h3>
-                    <button
-                      type="button"
-                      className="btn btn-outline-danger btn-sm"
-                      onClick={() => setParticipantFileData([])}
-                      title="Delete and remove this file from preview"
-                    >
-                      <Icon name="delete" alt="Delete preview" sizePx={16} /> Delete Preview
-                    </button>
-                  </div>
-                  <div className="table-wrapper">
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th>Full Name</th>
-                          <th>Email</th>
-                          <th>Event Pass</th>
+              <div className="data-importer-preview">
+                <div className="data-importer-preview-head">
+                  <h3>Preview Data</h3>
+                </div>
+                <div className="data-importer-table-scroll">
+                  <table className="data-importer-table">
+                    <thead>
+                      <tr>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Pass Code</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {participantFileData.slice(0, 5).map((row, idx) => (
+                        <tr key={idx} className={!isValidParticipantRow(row) ? 'data-importer-row-invalid' : ''}>
+                          <td>{row.name}</td>
+                          <td>{row.email || '-'}</td>
+                          <td>{row.eventPass || '-'}</td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {participantFileData.slice(0, 5).map((row, idx) => (
-                          <tr key={idx} className={isValidParticipantRow(row) ? 'row-valid' : 'row-invalid'}>
-                            <td>{row.name}</td>
-                            <td>{row.email || '-'}</td>
-                            <td>{row.eventPass || '-'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {participantFileData.length > 5 && (
+                  <div style={{ padding: '12px 16px', color: '#8a8a9b', fontSize: '0.9rem' }}>
+                    And {participantFileData.length - 5} more rows...
                   </div>
-                  {participantFileData.length > 5 && (
-                    <p className="text-muted">... and {participantFileData.length - 5} more rows</p>
-                  )}
-                </div>
+                )}
+              </div>
+            )}
 
-                <div className="page-actions">
-                  <button
-                    className="btn btn-primary btn-lg"
-                    onClick={handleImportParticipants}
-                    disabled={importingParticipants}
-                  >
-                    {importingParticipants ? <><Icon name="loader" alt="Importing" sizePx={16} spin /> Importing...</> : <><Icon name="success" alt="Import" sizePx={16} /> Import Participants</>}
-                  </button>
-                  <button
-                    className="btn btn-secondary btn-lg"
-                    onClick={() => setParticipantFileData([])}
-                    disabled={importingParticipants}
-                  >
-                    Clear
-                  </button>
-                </div>
-              </>
+            {participantFileData.length > 0 && (
+              <div className="data-importer-actions">
+                <button
+                  className="data-importer-btn data-importer-btn-primary"
+                  onClick={handleImportParticipants}
+                  disabled={importingParticipants}
+                  style={{ flex: 1 }}
+                >
+                  {importingParticipants ? 'Importing...' : 'Start Import'}
+                </button>
+                <button
+                  className="data-importer-btn data-importer-btn-secondary"
+                  onClick={() => setParticipantFileData([])}
+                  disabled={importingParticipants}
+                >
+                  Cancel
+                </button>
+              </div>
             )}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Attendance Tab */}
-      {activeTab === 'attendance' && (
-        <div className="tab-content card">
-          {attendanceMessage && (
-            <div className={`alert alert-${attendanceMessage.type}`}>
-              {attendanceMessage.text}
-            </div>
-          )}
 
-          <div className="import-section">
-            <div className="section-header">
-              <div>
-                <h2>Import Attendance Records from CSV</h2>
-                <p className="section-desc">Upload a CSV file with columns: name (required), email (required), status (optional). Status can be "attended", "not attended", or left empty for no-show.</p>
+        {/* =========================================
+            ATTENDANCE TAB content
+           ========================================= */}
+        {activeTab === 'attendance' && (
+          <div className="data-importer-tab-content">
+            {attendanceMessage && (
+              <div className={`data-importer-alert data-importer-alert-${attendanceMessage.type}`}>
+                <Icon name={attendanceMessage.type === 'success' ? 'success' : 'warning'} alt="Status" sizePx={20} />
+                <span>{attendanceMessage.text}</span>
               </div>
+            )}
+
+            <div className="data-importer-section-head">
+              <h2>Import Attendance</h2>
+              <p className="data-importer-section-desc">
+                Upload a CSV with <strong>Name</strong> and <strong>Email</strong> to mark attendance. Status column is optional.
+              </p>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="event-select-attendance">Select Event *</label>
+            <div className="data-importer-form-group">
+              <label htmlFor="attendance-event-select" className="data-importer-label">Select Target Event</label>
               <select
-                id="event-select-attendance"
+                id="attendance-event-select"
+                className="data-importer-select"
                 value={selectedEventAttendance}
                 onChange={(e) => setSelectedEventAttendance(e.target.value)}
               >
@@ -683,197 +702,222 @@ export function ImportAttendance() {
               </select>
             </div>
 
-            <div className="file-upload">
+            <div className="data-importer-upload-zone">
               <input
                 type="file"
+                className="data-importer-file-input"
                 accept=".csv,.xlsx,.xls"
                 onChange={handleAttendanceFileSelect}
-                id="csv-file-attendance"
+                id="attendance-file-upload"
               />
-              <label htmlFor="csv-file-attendance" className="file-label">
-                Click to select CSV or Excel file
-              </label>
+              <div className="data-importer-drop-area">
+                <div className="data-importer-icon-upload"></div>
+                <div>
+                  <strong>Click or Drag to Upload</strong>
+                  <div style={{ marginTop: 8, fontSize: '0.85rem', opacity: 0.7 }}>
+                    Supports .CSV, .XLSX, .XLS
+                  </div>
+                </div>
+              </div>
+
               {attendanceFileData.length > 0 && (
-                <div className="file-info">
-                  <span><Icon name="check" alt="File loaded" sizePx={16} /> File loaded: {attendanceFileData.length} rows</span>
+                <div className="data-importer-file-status">
+                  <div className="data-importer-file-name">
+                    <Icon name="check" alt="Ready" sizePx={18} />
+                    {attendanceFileData.length} records loaded
+                  </div>
                   <button
-                    type="button"
-                    className="btn btn-sm btn-danger"
+                    className="data-importer-delete-file-btn"
                     onClick={() => setAttendanceFileData([])}
                   >
-                    <Icon name="delete" alt="Delete file" sizePx={16} /> Delete File
+                    Remove File
                   </button>
                 </div>
               )}
             </div>
 
             {attendanceFileData.length > 0 && (
-              <>
-                <div className="data-preview-box">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <h3 style={{ margin: 0 }}>Preview ({attendanceFileData.length} rows)</h3>
-                    <button
-                      type="button"
-                      className="btn btn-outline-danger btn-sm"
-                      onClick={() => setAttendanceFileData([])}
-                      title="Delete and remove this file from preview"
-                    >
-                      <Icon name="delete" alt="Delete preview" sizePx={16} /> Delete Preview
-                    </button>
-                  </div>
-                  <div className="table-wrapper">
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th>Name</th>
-                          <th>Email</th>
-                          <th>Attendance Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {attendanceFileData.slice(0, 5).map((row, idx) => {
-                          const status = normalizeStatus(row.status);
-                          const isValid = isValidAttendanceRow(row);
-                          return (
-                            <tr key={idx} className={isValid ? 'row-valid' : 'row-invalid'}>
-                              <td>{row.name}</td>
-                              <td>{row.email}</td>
-                              <td>
-                                <span className={`badge ${getStatusBadgeColor(status)}`}>
-                                  {getStatusLabel(status)}
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                  {attendanceFileData.length > 5 && (
-                    <p className="text-muted">... and {attendanceFileData.length - 5} more rows</p>
-                  )}
+              <div className="data-importer-preview">
+                <div className="data-importer-preview-head">
+                  <h3>Preview Data</h3>
                 </div>
+                <div className="data-importer-table-scroll">
+                  <table className="data-importer-table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {attendanceFileData.slice(0, 5).map((row, idx) => {
+                        const status = normalizeStatus(row.status);
+                        return (
+                          <tr key={idx} className={!isValidAttendanceRow(row) ? 'data-importer-row-invalid' : ''}>
+                            <td>{row.name}</td>
+                            <td>{row.email}</td>
+                            <td>
+                              <span className={getStatusBadgeColor(status)}>
+                                {getStatusLabel(status)}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                {attendanceFileData.length > 5 && (
+                  <div style={{ padding: '12px 16px', color: '#8a8a9b', fontSize: '0.9rem' }}>
+                    And {attendanceFileData.length - 5} more rows...
+                  </div>
+                )}
+              </div>
+            )}
 
-                <div className="page-actions">
-                  <button
-                    className="btn btn-primary btn-lg"
-                    onClick={handleImportAttendance}
-                    disabled={importingAttendance}
-                  >
-                    {importingAttendance ? <><Icon name="loader" alt="Importing" sizePx={16} spin /> Importing...</> : <><Icon name="success" alt="Import attendance" sizePx={16} /> Import Attendance</>}
-                  </button>
-                  <button
-                    className="btn btn-secondary btn-lg"
-                    onClick={() => setAttendanceFileData([])}
-                    disabled={importingAttendance}
-                  >
-                    Clear
-                  </button>
-                </div>
-              </>
+            {attendanceFileData.length > 0 && (
+              <div className="data-importer-actions">
+                <button
+                  className="data-importer-btn data-importer-btn-primary"
+                  onClick={handleImportAttendance}
+                  disabled={importingAttendance}
+                  style={{ flex: 1 }}
+                >
+                  {importingAttendance ? 'Importing...' : 'Start Import'}
+                </button>
+                <button
+                  className="data-importer-btn data-importer-btn-secondary"
+                  onClick={() => setAttendanceFileData([])}
+                  disabled={importingAttendance}
+                >
+                  Cancel
+                </button>
+              </div>
             )}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Delete Tab */}
-      {activeTab === 'delete' && (
-        <div className="tab-content card">
-          {deleteMessage && (
-            <div className={`alert alert-${deleteMessage.type}`}>
-              {deleteMessage.text}
-              {lastDeleteUndo && deleteMessage.type === 'success' && (
-                <span style={{ marginLeft: '12px' }}>
-                  <button className="btn btn-outline-warning btn-sm" onClick={handleUndoDelete}>
-                    Undo Last Delete
+
+        {/* =========================================
+            DELETE TAB content
+           ========================================= */}
+        {activeTab === 'delete' && (
+          <div className="data-importer-tab-content">
+            {deleteMessage && (
+              <div className={`data-importer-alert data-importer-alert-${deleteMessage.type}`}>
+                <Icon name={deleteMessage.type === 'success' ? 'success' : 'warning'} alt="Status" sizePx={20} />
+                <span>{deleteMessage.text}</span>
+                {lastDeleteUndo && deleteMessage.type === 'success' && (
+                  <button
+                    className="data-importer-btn-secondary"
+                    onClick={handleUndoDelete}
+                    style={{ marginLeft: 16, padding: '4px 12px', fontSize: '0.8rem', borderRadius: 4, cursor: 'pointer' }}
+                  >
+                    Undo
                   </button>
-                </span>
-              )}
+                )}
+              </div>
+            )}
+
+            <div className="data-importer-section-head">
+              <h2>Data Management & Deletion</h2>
+              <p className="data-importer-section-desc">
+                Permanently remove participants or attendance records from an event. <strong>This action is destructive.</strong>
+              </p>
             </div>
-          )}
 
-          <div className="section-header">
-            <div>
-              <h2>Delete All Data for Event</h2>
-              <p className="section-desc">Permanently delete all participants or attendance records for a selected event. This action cannot be undone.</p>
+            <div className="data-importer-form-group">
+              <label htmlFor="delete-event-select" className="data-importer-label">Select Event for Deletion</label>
+              <select
+                id="delete-event-select"
+                className="data-importer-select"
+                value={selectedEventDelete}
+                onChange={(e) => setSelectedEventDelete(e.target.value)}
+              >
+                <option value="">-- Choose an event --</option>
+                {events?.map((event) => (
+                  <option key={event.id} value={event.id}>
+                    {event.name} ({new Date(event.date).toLocaleDateString()})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 40 }}>
+              <div style={{ background: 'rgba(255, 71, 87, 0.05)', padding: 20, borderRadius: 10, border: '1px solid rgba(255, 71, 87, 0.1)' }}>
+                <h3 style={{ margin: '0 0 12px 0', fontSize: '1.1rem', color: '#ff4757' }}>Delete Participants</h3>
+                <p style={{ fontSize: '0.9rem', color: '#a0a0b0', marginBottom: 20 }}>
+                  Removes all registered participants AND their attendance records for the selected event.
+                </p>
+                <button
+                  className="data-importer-btn data-importer-btn-danger"
+                  onClick={handleDeleteAllParticipants}
+                  disabled={!selectedEventDelete}
+                  style={{ width: '100%', padding: '12px' }}
+                >
+                  Delete Participants
+                </button>
+              </div>
+
+              <div style={{ background: 'rgba(255, 71, 87, 0.05)', padding: 20, borderRadius: 10, border: '1px solid rgba(255, 71, 87, 0.1)' }}>
+                <h3 style={{ margin: '0 0 12px 0', fontSize: '1.1rem', color: '#ff4757' }}>Clear Attendance</h3>
+                <p style={{ fontSize: '0.9rem', color: '#a0a0b0', marginBottom: 20 }}>
+                  Resets attendance data for the event. Participants will remain in the system.
+                </p>
+                <button
+                  className="data-importer-btn data-importer-btn-danger"
+                  onClick={handleDeleteAllAttendance}
+                  disabled={!selectedEventDelete}
+                  style={{ width: '100%', padding: '12px' }}
+                >
+                  Clear Attendance Info
+                </button>
+              </div>
+            </div>
+
+            <div className="data-importer-alert data-importer-alert-warning" style={{ marginTop: 30 }}>
+              <Icon name="warning" alt="Warning" sizePx={20} />
+              <span>
+                <strong>Warning:</strong> Deleted data cannot be recovered after you leave this page unless you use the "Undo" button immediately.
+              </span>
             </div>
           </div>
+        )}
 
-          {/* Event Selector */}
-          <div className="form-group">
-            <label htmlFor="delete-event-select">Select Event *</label>
-            <select
-              id="delete-event-select"
-              value={selectedEventDelete}
-              onChange={(e) => setSelectedEventDelete(e.target.value)}
-            >
-              <option value="">-- Choose an event --</option>
-              {events?.map((event) => (
-                <option key={event.id} value={event.id}>
-                  {event.name} ({new Date(event.date).toLocaleDateString()})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Delete Actions */}
-          <div className="delete-actions" style={{ display: 'flex', gap: '16px', marginTop: '30px' }}>
-            <button
-              className="btn btn-danger btn-lg"
-              onClick={handleDeleteAllParticipants}
-              disabled={!selectedEventDelete}
-              style={{ flex: 1 }}
-            >
-              <Icon name="delete" alt="Delete participants" sizePx={18} /> Delete All Participants
-            </button>
-            <button
-              className="btn btn-danger btn-lg"
-              onClick={handleDeleteAllAttendance}
-              disabled={!selectedEventDelete}
-              style={{ flex: 1 }}
-            >
-              <Icon name="delete" alt="Delete attendance" sizePx={18} /> Delete All Attendance
-            </button>
-          </div>
-
-          <div className="alert alert-warning" style={{ marginTop: '30px' }}>
-            <Icon name="warning" alt="Warning" sizePx={16} />
-            <strong>Warning:</strong> Deleting participants will also remove all their attendance records. Deleting attendance will only remove attendance data.
-          </div>
-        </div>
-      )}
+      </div>
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmation.isOpen && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h2>Confirm Delete All</h2>
+        <div className="data-importer-modal-overlay">
+          <div className="data-importer-modal">
+            <div className="data-importer-modal-header">
+              <h2>Confirm Deletion</h2>
             </div>
-            <div className="modal-body">
-              <p className="warning-message">
-                <Icon name="warning" alt="Warning" sizePx={16} />
-                You are about to permanently delete ALL {deleteConfirmation.type === 'participant' ? 'participants' : 'attendance records'} for this event.
-                {deleteConfirmation.type === 'participant' && ' This will also delete all associated attendance records.'}
-                <br /><br />
-                <strong>This action cannot be undone.</strong>
+            <div className="data-importer-modal-body">
+              <p>
+                Are you sure you want to delete all <strong>{deleteConfirmation.type === 'participant' ? 'participants' : 'attendance records'}</strong> for this event?
               </p>
+              {deleteConfirmation.type === 'participant' && (
+                <p style={{ color: '#ff4757', marginTop: 12 }}>
+                  This will also remove all associated attendance records. This cannot be undone once confirmed.
+                </p>
+              )}
             </div>
-            <div className="modal-actions">
+            <div className="data-importer-modal-footer">
               <button
-                className="modal-btn modal-btn-cancel"
-                onClick={() => setDeleteConfirmation({
-                  isOpen: false,
-                  type: null,
-                })}
+                className="data-importer-btn data-importer-btn-secondary"
+                style={{ padding: '10px 20px', fontSize: '0.9rem' }}
+                onClick={() => setDeleteConfirmation({ isOpen: false, type: null })}
               >
                 Cancel
               </button>
               <button
-                className="modal-btn modal-btn-delete"
+                className="data-importer-btn data-importer-btn-danger"
+                style={{ padding: '10px 20px', fontSize: '0.9rem' }}
                 onClick={performDelete}
               >
-                Delete All {deleteConfirmation.type === 'participant' ? 'Participants' : 'Attendance'}
+                Confirm Delete
               </button>
             </div>
           </div>
@@ -882,4 +926,3 @@ export function ImportAttendance() {
     </div>
   );
 }
-
