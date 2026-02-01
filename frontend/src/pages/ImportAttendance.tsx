@@ -4,7 +4,7 @@ import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { participantsAPI, attendanceAPI, eventsAPI } from '../api/client';
 import { useAsync } from '../utils/hooks';
-import './ImportAttendance.css';
+import './ImportDataStyles.css';
 
 interface ParsedParticipant {
   name: string;
