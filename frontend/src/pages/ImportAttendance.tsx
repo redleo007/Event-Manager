@@ -4,7 +4,8 @@ import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { participantsAPI, attendanceAPI, eventsAPI } from '../api/client';
 import { useAsync } from '../utils/hooks';
-import './ImportDataStyles.css';
+// @ts-ignore
+import styles from './ImportAttendance.module.css';
 
 interface ParsedParticipant {
   name: string;
@@ -369,8 +370,6 @@ export function ImportAttendance() {
         void primaryError;
       }
 
-      // Session ID is captured by the import_sessions table for history tracking
-
       setParticipantMessage({
         type: 'success',
         text: `Import completed successfully! ${participantFileData.length} participants imported.`,
@@ -482,10 +481,7 @@ export function ImportAttendance() {
         }
         void primaryError; // silence unused variable
       }
-      // Suppress unused variable warning - response may contain session data
       void response;
-
-      // Session ID is captured by the import_sessions table for history tracking
 
       setAttendanceMessage({
         type: 'success',
@@ -505,30 +501,30 @@ export function ImportAttendance() {
   };
 
   return (
-    <div className="data-importer-container">
-      <div className="data-importer-header">
+    <div className={styles['data-importer-container']}>
+      <div className={styles['data-importer-header']}>
         <h1>Import Data</h1>
         <p>Bulk import participants and attendance records for your events.</p>
       </div>
 
-      <div className="data-importer-tabs-wrapper">
-        <div className="data-importer-tabs">
+      <div className={styles['data-importer-tabs-wrapper']}>
+        <div className={styles['data-importer-tabs']}>
           <button
-            className={`data-importer-tab-btn ${activeTab === 'participants' ? 'active' : ''}`}
+            className={`${styles['data-importer-tab-btn']} ${activeTab === 'participants' ? styles['active'] : ''}`}
             onClick={() => setActiveTab('participants')}
           >
             <Icon name="users" alt="Participants" sizePx={16} />
             Import Participants
           </button>
           <button
-            className={`data-importer-tab-btn ${activeTab === 'attendance' ? 'active' : ''}`}
+            className={`${styles['data-importer-tab-btn']} ${activeTab === 'attendance' ? styles['active'] : ''}`}
             onClick={() => setActiveTab('attendance')}
           >
             <Icon name="check" alt="Attendance" sizePx={16} />
             Import Attendance
           </button>
           <button
-            className={`data-importer-tab-btn ${activeTab === 'delete' ? 'active' : ''}`}
+            className={`${styles['data-importer-tab-btn']} ${activeTab === 'delete' ? styles['active'] : ''}`}
             onClick={() => setActiveTab('delete')}
           >
             <Icon name="delete" alt="Delete" sizePx={16} />
@@ -538,7 +534,7 @@ export function ImportAttendance() {
       </div>
 
       {/* Content Area */}
-      <div className="data-importer-card">
+      <div className={styles['data-importer-card']}>
 
         {/* =========================================
             PARTICIPANTS TAB content
@@ -546,24 +542,24 @@ export function ImportAttendance() {
         {activeTab === 'participants' && (
           <div className="data-importer-tab-content">
             {participantMessage && (
-              <div className={`data-importer-alert data-importer-alert-${participantMessage.type}`}>
+              <div className={`${styles['data-importer-alert']} ${styles[`data-importer-alert-${participantMessage.type}`]}`}>
                 <Icon name={participantMessage.type === 'success' ? 'success' : 'warning'} alt="Status" sizePx={20} />
                 <span>{participantMessage.text}</span>
               </div>
             )}
 
-            <div className="data-importer-section-head">
+            <div className={styles['data-importer-section-head']}>
               <h2>Import Participants</h2>
-              <p className="data-importer-section-desc">
+              <p className={styles['data-importer-section-desc']}>
                 Upload a CSV file containing <strong>Full Name</strong> (required), <strong>Email</strong>, and <strong>Event Pass</strong>.
               </p>
             </div>
 
-            <div className="data-importer-form-group">
-              <label htmlFor="participants-event-select" className="data-importer-label">Select Target Event</label>
+            <div className={styles['data-importer-form-group']}>
+              <label htmlFor="participants-event-select" className={styles['data-importer-label']}>Select Target Event</label>
               <select
                 id="participants-event-select"
-                className="data-importer-select"
+                className={styles['data-importer-select']}
                 value={selectedEventParticipants}
                 onChange={(e) => setSelectedEventParticipants(e.target.value)}
               >
@@ -576,16 +572,16 @@ export function ImportAttendance() {
               </select>
             </div>
 
-            <div className="data-importer-upload-zone">
+            <div className={styles['data-importer-upload-zone']}>
               <input
                 type="file"
-                className="data-importer-file-input"
+                className={styles['data-importer-file-input']}
                 accept=".csv,.xlsx,.xls"
                 onChange={handleParticipantFileSelect}
                 id="participant-file-upload"
               />
-              <div className="data-importer-drop-area">
-                <div className="data-importer-icon-upload"></div>
+              <div className={styles['data-importer-drop-area']}>
+                <div className={styles['data-importer-icon-upload']}></div>
                 <div>
                   <strong>Click or Drag to Upload</strong>
                   <div style={{ marginTop: 8, fontSize: '0.85rem', opacity: 0.7 }}>
@@ -595,13 +591,13 @@ export function ImportAttendance() {
               </div>
 
               {participantFileData.length > 0 && (
-                <div className="data-importer-file-status">
-                  <div className="data-importer-file-name">
+                <div className={styles['data-importer-file-status']}>
+                  <div className={styles['data-importer-file-name']}>
                     <Icon name="check" alt="Ready" sizePx={18} />
                     {participantFileData.length} rows loaded successfully
                   </div>
                   <button
-                    className="data-importer-delete-file-btn"
+                    className={styles['data-importer-delete-file-btn']}
                     onClick={() => setParticipantFileData([])}
                   >
                     Remove File
@@ -611,12 +607,12 @@ export function ImportAttendance() {
             </div>
 
             {participantFileData.length > 0 && (
-              <div className="data-importer-preview">
-                <div className="data-importer-preview-head">
+              <div className={styles['data-importer-preview']}>
+                <div className={styles['data-importer-preview-head']}>
                   <h3>Preview Data</h3>
                 </div>
-                <div className="data-importer-table-scroll">
-                  <table className="data-importer-table">
+                <div className={styles['data-importer-table-scroll']}>
+                  <table className={styles['data-importer-table']}>
                     <thead>
                       <tr>
                         <th>Full Name</th>
@@ -626,7 +622,7 @@ export function ImportAttendance() {
                     </thead>
                     <tbody>
                       {participantFileData.slice(0, 5).map((row, idx) => (
-                        <tr key={idx} className={!isValidParticipantRow(row) ? 'data-importer-row-invalid' : ''}>
+                        <tr key={idx} className={!isValidParticipantRow(row) ? styles['data-importer-row-invalid'] : ''}>
                           <td>{row.name}</td>
                           <td>{row.email || '-'}</td>
                           <td>{row.eventPass || '-'}</td>
@@ -644,9 +640,9 @@ export function ImportAttendance() {
             )}
 
             {participantFileData.length > 0 && (
-              <div className="data-importer-actions">
+              <div className={styles['data-importer-actions']}>
                 <button
-                  className="data-importer-btn data-importer-btn-primary"
+                  className={`${styles['data-importer-btn']} ${styles['data-importer-btn-primary']}`}
                   onClick={handleImportParticipants}
                   disabled={importingParticipants}
                   style={{ flex: 1 }}
@@ -654,7 +650,7 @@ export function ImportAttendance() {
                   {importingParticipants ? 'Importing...' : 'Start Import'}
                 </button>
                 <button
-                  className="data-importer-btn data-importer-btn-secondary"
+                  className={`${styles['data-importer-btn']} ${styles['data-importer-btn-secondary']}`}
                   onClick={() => setParticipantFileData([])}
                   disabled={importingParticipants}
                 >
@@ -672,24 +668,24 @@ export function ImportAttendance() {
         {activeTab === 'attendance' && (
           <div className="data-importer-tab-content">
             {attendanceMessage && (
-              <div className={`data-importer-alert data-importer-alert-${attendanceMessage.type}`}>
+              <div className={`${styles['data-importer-alert']} ${styles[`data-importer-alert-${attendanceMessage.type}`]}`}>
                 <Icon name={attendanceMessage.type === 'success' ? 'success' : 'warning'} alt="Status" sizePx={20} />
                 <span>{attendanceMessage.text}</span>
               </div>
             )}
 
-            <div className="data-importer-section-head">
+            <div className={styles['data-importer-section-head']}>
               <h2>Import Attendance</h2>
-              <p className="data-importer-section-desc">
+              <p className={styles['data-importer-section-desc']}>
                 Upload a CSV with <strong>Name</strong> and <strong>Email</strong> to mark attendance. Status column is optional.
               </p>
             </div>
 
-            <div className="data-importer-form-group">
-              <label htmlFor="attendance-event-select" className="data-importer-label">Select Target Event</label>
+            <div className={styles['data-importer-form-group']}>
+              <label htmlFor="attendance-event-select" className={styles['data-importer-label']}>Select Target Event</label>
               <select
                 id="attendance-event-select"
-                className="data-importer-select"
+                className={styles['data-importer-select']}
                 value={selectedEventAttendance}
                 onChange={(e) => setSelectedEventAttendance(e.target.value)}
               >
@@ -702,16 +698,16 @@ export function ImportAttendance() {
               </select>
             </div>
 
-            <div className="data-importer-upload-zone">
+            <div className={styles['data-importer-upload-zone']}>
               <input
                 type="file"
-                className="data-importer-file-input"
+                className={styles['data-importer-file-input']}
                 accept=".csv,.xlsx,.xls"
                 onChange={handleAttendanceFileSelect}
                 id="attendance-file-upload"
               />
-              <div className="data-importer-drop-area">
-                <div className="data-importer-icon-upload"></div>
+              <div className={styles['data-importer-drop-area']}>
+                <div className={styles['data-importer-icon-upload']}></div>
                 <div>
                   <strong>Click or Drag to Upload</strong>
                   <div style={{ marginTop: 8, fontSize: '0.85rem', opacity: 0.7 }}>
@@ -721,13 +717,13 @@ export function ImportAttendance() {
               </div>
 
               {attendanceFileData.length > 0 && (
-                <div className="data-importer-file-status">
-                  <div className="data-importer-file-name">
+                <div className={styles['data-importer-file-status']}>
+                  <div className={styles['data-importer-file-name']}>
                     <Icon name="check" alt="Ready" sizePx={18} />
                     {attendanceFileData.length} records loaded
                   </div>
                   <button
-                    className="data-importer-delete-file-btn"
+                    className={styles['data-importer-delete-file-btn']}
                     onClick={() => setAttendanceFileData([])}
                   >
                     Remove File
@@ -737,12 +733,12 @@ export function ImportAttendance() {
             </div>
 
             {attendanceFileData.length > 0 && (
-              <div className="data-importer-preview">
-                <div className="data-importer-preview-head">
+              <div className={styles['data-importer-preview']}>
+                <div className={styles['data-importer-preview-head']}>
                   <h3>Preview Data</h3>
                 </div>
-                <div className="data-importer-table-scroll">
-                  <table className="data-importer-table">
+                <div className={styles['data-importer-table-scroll']}>
+                  <table className={styles['data-importer-table']}>
                     <thead>
                       <tr>
                         <th>Name</th>
@@ -754,11 +750,11 @@ export function ImportAttendance() {
                       {attendanceFileData.slice(0, 5).map((row, idx) => {
                         const status = normalizeStatus(row.status);
                         return (
-                          <tr key={idx} className={!isValidAttendanceRow(row) ? 'data-importer-row-invalid' : ''}>
+                          <tr key={idx} className={!isValidAttendanceRow(row) ? styles['data-importer-row-invalid'] : ''}>
                             <td>{row.name}</td>
                             <td>{row.email}</td>
                             <td>
-                              <span className={getStatusBadgeColor(status)}>
+                              <span className={styles[getStatusBadgeColor(status)] || getStatusBadgeColor(status)}>
                                 {getStatusLabel(status)}
                               </span>
                             </td>
@@ -777,9 +773,9 @@ export function ImportAttendance() {
             )}
 
             {attendanceFileData.length > 0 && (
-              <div className="data-importer-actions">
+              <div className={styles['data-importer-actions']}>
                 <button
-                  className="data-importer-btn data-importer-btn-primary"
+                  className={`${styles['data-importer-btn']} ${styles['data-importer-btn-primary']}`}
                   onClick={handleImportAttendance}
                   disabled={importingAttendance}
                   style={{ flex: 1 }}
@@ -787,7 +783,7 @@ export function ImportAttendance() {
                   {importingAttendance ? 'Importing...' : 'Start Import'}
                 </button>
                 <button
-                  className="data-importer-btn data-importer-btn-secondary"
+                  className={`${styles['data-importer-btn']} ${styles['data-importer-btn-secondary']}`}
                   onClick={() => setAttendanceFileData([])}
                   disabled={importingAttendance}
                 >
@@ -805,12 +801,12 @@ export function ImportAttendance() {
         {activeTab === 'delete' && (
           <div className="data-importer-tab-content">
             {deleteMessage && (
-              <div className={`data-importer-alert data-importer-alert-${deleteMessage.type}`}>
+              <div className={`${styles['data-importer-alert']} ${styles[`data-importer-alert-${deleteMessage.type}`]}`}>
                 <Icon name={deleteMessage.type === 'success' ? 'success' : 'warning'} alt="Status" sizePx={20} />
                 <span>{deleteMessage.text}</span>
                 {lastDeleteUndo && deleteMessage.type === 'success' && (
                   <button
-                    className="data-importer-btn-secondary"
+                    className={styles['data-importer-btn-secondary']}
                     onClick={handleUndoDelete}
                     style={{ marginLeft: 16, padding: '4px 12px', fontSize: '0.8rem', borderRadius: 4, cursor: 'pointer' }}
                   >
@@ -820,18 +816,18 @@ export function ImportAttendance() {
               </div>
             )}
 
-            <div className="data-importer-section-head">
+            <div className={styles['data-importer-section-head']}>
               <h2>Data Management & Deletion</h2>
-              <p className="data-importer-section-desc">
+              <p className={styles['data-importer-section-desc']}>
                 Permanently remove participants or attendance records from an event. <strong>This action is destructive.</strong>
               </p>
             </div>
 
-            <div className="data-importer-form-group">
-              <label htmlFor="delete-event-select" className="data-importer-label">Select Event for Deletion</label>
+            <div className={styles['data-importer-form-group']}>
+              <label htmlFor="delete-event-select" className={styles['data-importer-label']}>Select Event for Deletion</label>
               <select
                 id="delete-event-select"
-                className="data-importer-select"
+                className={styles['data-importer-select']}
                 value={selectedEventDelete}
                 onChange={(e) => setSelectedEventDelete(e.target.value)}
               >
@@ -851,7 +847,7 @@ export function ImportAttendance() {
                   Removes all registered participants AND their attendance records for the selected event.
                 </p>
                 <button
-                  className="data-importer-btn data-importer-btn-danger"
+                  className={`${styles['data-importer-btn']} ${styles['data-importer-btn-danger']}`}
                   onClick={handleDeleteAllParticipants}
                   disabled={!selectedEventDelete}
                   style={{ width: '100%', padding: '12px' }}
@@ -866,7 +862,7 @@ export function ImportAttendance() {
                   Resets attendance data for the event. Participants will remain in the system.
                 </p>
                 <button
-                  className="data-importer-btn data-importer-btn-danger"
+                  className={`${styles['data-importer-btn']} ${styles['data-importer-btn-danger']}`}
                   onClick={handleDeleteAllAttendance}
                   disabled={!selectedEventDelete}
                   style={{ width: '100%', padding: '12px' }}
@@ -876,7 +872,7 @@ export function ImportAttendance() {
               </div>
             </div>
 
-            <div className="data-importer-alert data-importer-alert-warning" style={{ marginTop: 30 }}>
+            <div className={`${styles['data-importer-alert']} ${styles['data-importer-alert-warning']}`} style={{ marginTop: 30 }}>
               <Icon name="warning" alt="Warning" sizePx={20} />
               <span>
                 <strong>Warning:</strong> Deleted data cannot be recovered after you leave this page unless you use the "Undo" button immediately.
@@ -889,12 +885,12 @@ export function ImportAttendance() {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmation.isOpen && (
-        <div className="data-importer-modal-overlay">
-          <div className="data-importer-modal">
-            <div className="data-importer-modal-header">
+        <div className={styles['data-importer-modal-overlay']}>
+          <div className={styles['data-importer-modal']}>
+            <div className={styles['data-importer-modal-header']}>
               <h2>Confirm Deletion</h2>
             </div>
-            <div className="data-importer-modal-body">
+            <div className={styles['data-importer-modal-body']}>
               <p>
                 Are you sure you want to delete all <strong>{deleteConfirmation.type === 'participant' ? 'participants' : 'attendance records'}</strong> for this event?
               </p>
@@ -904,16 +900,16 @@ export function ImportAttendance() {
                 </p>
               )}
             </div>
-            <div className="data-importer-modal-footer">
+            <div className={styles['data-importer-modal-footer']}>
               <button
-                className="data-importer-btn data-importer-btn-secondary"
+                className={`${styles['data-importer-btn']} ${styles['data-importer-btn-secondary']}`}
                 style={{ padding: '10px 20px', fontSize: '0.9rem' }}
                 onClick={() => setDeleteConfirmation({ isOpen: false, type: null })}
               >
                 Cancel
               </button>
               <button
-                className="data-importer-btn data-importer-btn-danger"
+                className={`${styles['data-importer-btn']} ${styles['data-importer-btn-danger']}`}
                 style={{ padding: '10px 20px', fontSize: '0.9rem' }}
                 onClick={performDelete}
               >
