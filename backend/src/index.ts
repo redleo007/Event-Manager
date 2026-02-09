@@ -14,7 +14,7 @@ import blocklistRouter from './routes/blocklist';
 import blocklistOptimized from './routes/blocklistOptimized';
 import settingsRouter from './routes/settings';
 import dashboardRouter from './routes/dashboard';
-import dashboardSummary from './routes/dashboardSummary';
+
 import noShowsRouter from './routes/noShows';
 import eventParticipantsRouter from './routes/eventParticipants';
 

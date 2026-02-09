@@ -7,32 +7,28 @@ const router = Router();
 
 /**
  * OPTIMIZED /stats endpoint - ALL counts in parallel
- * Target: <100ms response time
+ * Target: <50ms response time
  */
 router.get(
   '/stats',
   asyncHandler(async (_req: Request, res: Response) => {
     const supabase = getSupabaseClient();
 
-    // Run ALL count queries in parallel - no sequential waits
-    const [eventRes, allAttendanceRes, noShowRes, blocklistRes] = await Promise.all([
+    // Run ALL count queries in parallel - no sequential waits, no full table scans
+    const [eventRes, participantRes, noShowRes, blocklistRes] = await Promise.all([
       supabase.from('events').select('*', { count: 'exact', head: true }),
-      // Get all attendance records to count unique participants
-      supabase.from('attendance').select('participant_id'),
+      // Optimized: Count participants directly from participants table instead of scanning millions of attendance records
+      supabase.from('participants').select('*', { count: 'exact', head: true }).eq('is_blocklisted', false),
       supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('status', 'not_attended'),
       supabase.from('blocklist').select('*', { count: 'exact', head: true }),
     ]);
-
-    // Count unique participants from attendance records
-    const attendanceRows = allAttendanceRes.data || [];
-    const uniqueParticipantIds = new Set(attendanceRows.map((r: any) => r.participant_id));
 
     // Short cache to reduce redundant requests during rapid refreshes
     res.set('Cache-Control', 'private, max-age=5');
 
     res.json(successResponse({
       totalEvents: eventRes.count || 0,
-      activeParticipants: uniqueParticipantIds.size,
+      activeParticipants: participantRes.count || 0,
       blocklistedParticipants: blocklistRes.count || 0,
       noShows: noShowRes.count || 0,
       recentActivities: [],
@@ -43,32 +39,27 @@ router.get(
 
 /**
  * OPTIMIZED /summary endpoint - ALL counts in single parallel batch
- * Target: <50ms response time
+ * Target: <30ms response time
  */
 router.get(
   '/summary',
   asyncHandler(async (_req: Request, res: Response) => {
     const supabase = getSupabaseClient();
 
-    // ALL queries in parallel
-    const [eventRes, allAttendanceRes, noShowRes, blocklistRes] = await Promise.all([
+    // ALL queries in parallel using lightweight head:true requests
+    const [eventRes, participantRes, noShowRes, blocklistRes] = await Promise.all([
       supabase.from('events').select('*', { count: 'exact', head: true }),
-      // Get all attendance records to count unique participants
-      supabase.from('attendance').select('participant_id'),
+      supabase.from('participants').select('*', { count: 'exact', head: true }).eq('is_blocklisted', false),
       supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('status', 'not_attended'),
       supabase.from('blocklist').select('*', { count: 'exact', head: true }),
     ]);
-
-    // Count unique participants from attendance records
-    const attendanceRows = allAttendanceRes.data || [];
-    const uniqueParticipantIds = new Set(attendanceRows.map((r: any) => r.participant_id));
 
     // Short cache for rapid refresh scenarios
     res.set('Cache-Control', 'private, max-age=5');
 
     res.json(successResponse({
       events: eventRes.count || 0,
-      participants: uniqueParticipantIds.size,
+      participants: participantRes.count || 0,
       noShows: noShowRes.count || 0,
       blocklisted: blocklistRes.count || 0,
       lastUpdated: new Date().toISOString(),
@@ -78,7 +69,7 @@ router.get(
 
 /**
  * OPTIMIZED /overview endpoint - Minimal queries, maximum parallelism
- * Target: <150ms response time
+ * Target: <100ms response time
  */
 router.get(
   '/overview',
@@ -108,25 +99,21 @@ router.get(
 
     // Only fetch event-specific stats if we have a latest event
     if (latestEvent?.id) {
-      const [attendedRes, eventNoShowRes, allAttendanceRes] = await Promise.all([
+      const [attendedRes, eventNoShowRes, eventParticipantsRes] = await Promise.all([
         // Count only those who actually attended (status = 'attended')
         supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('event_id', latestEvent.id).eq('status', 'attended'),
         supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('event_id', latestEvent.id).eq('status', 'not_attended'),
-        // Get all attendance records to count unique participants
-        supabase.from('attendance').select('participant_id').eq('event_id', latestEvent.id),
+        // Count total participants associated with this event (attended or not)
+        supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('event_id', latestEvent.id),
       ]);
-
-      // Count unique participants from attendance records
-      const attendanceRows = allAttendanceRes.data || [];
-      const uniqueParticipantIds = new Set(attendanceRows.map((r: any) => r.participant_id));
 
       lastEventStats = {
         id: latestEvent.id,
         name: latestEvent.name,
         date: latestEvent.date || null,
-        attendanceCount: attendedRes.count || 0,  // Only 'attended' status
+        attendanceCount: attendedRes.count || 0,
         noShowCount: eventNoShowRes.count || 0,
-        participantCount: uniqueParticipantIds.size,  // Unique participants in this event
+        participantCount: eventParticipantsRes.count || 0,
         blocklistedInEvent: 0, // Skip expensive join for speed
       };
     }

@@ -56,10 +56,11 @@ export function NoShows() {
 
   /* ================= LOAD ON MOUNT ================= */
 
+  /* ================= LOAD ON MOUNT ================= */
+
   useEffect(() => {
     document.title = 'No Shows - TechNexus Community';
     loadData();
-    loadFormData();
   }, []);
 
   /* ================= LOAD FORM DATA ================= */
@@ -316,7 +317,13 @@ export function NoShows() {
           <div className="action-buttons">
             <button
               className="btn btn-primary btn-sm"
-              onClick={() => setShowAddForm(!showAddForm)}
+              onClick={() => {
+                const nextState = !showAddForm;
+                setShowAddForm(nextState);
+                if (nextState && participants.length === 0) {
+                  loadFormData();
+                }
+              }}
             >
               <Icon name="add" alt="Add" sizePx={16} /> Add
             </button>
@@ -409,11 +416,10 @@ export function NoShows() {
                     <td>{r.participants?.email ?? 'N/A'}</td>
                     <td>
                       <span
-                        className={`badge ${
-                          noShowsByParticipant[r.participant_id] >= 2
+                        className={`badge ${noShowsByParticipant[r.participant_id] >= 2
                             ? 'badge-danger'
                             : 'badge-warning'
-                        }`}
+                          }`}
                       >
                         {noShowsByParticipant[r.participant_id] || 1}
                       </span>
