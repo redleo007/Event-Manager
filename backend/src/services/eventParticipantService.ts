@@ -155,17 +155,33 @@ function markBackupUsed(eventId: string) {
 export async function deleteAllEventParticipants(eventId: string): Promise<{ deleted: number; undoToken: string }> {
   const supabase = getSupabaseClient();
 
-  // Gather attendance for this event (including participant info for backup)
+  // 1. Gather attendance (attended)
   const { data: attendanceRecords, error: attendanceFetchError } = await supabase
     .from('attendance')
-    .select(`id, event_id, participant_id, status, marked_at, created_at, participants(id, name, email, is_blocklisted, blocklist_reason)`) // join for email
+    .select(`id, event_id, participant_id, status, marked_at, created_at, participants(id, name, email, is_blocklisted, blocklist_reason)`)
     .eq('event_id', eventId);
 
   if (attendanceFetchError) throw new Error(`Failed to fetch attendance: ${attendanceFetchError.message}`);
 
-  const participantIds = [...new Set((attendanceRecords || []).map((a: any) => a.participant_id))];
+  // 2. Gather no-shows (not_attended)
+  const { data: noShowRecords, error: noShowFetchError } = await supabase
+    .from('no_shows')
+    .select(`id, event_id, participant_id, created_at, participants(id, name, email, is_blocklisted, blocklist_reason)`)
+    .eq('event_id', eventId);
 
-  // Fetch participant details
+  if (noShowFetchError) throw new Error(`Failed to fetch no-shows: ${noShowFetchError.message}`);
+
+  // Normalize no-shows to match attendance structure for backup
+  const normalizedNoShows = (noShowRecords || []).map((r: any) => ({
+    ...r,
+    status: 'not_attended',
+    marked_at: r.created_at // no-shows use created_at as marked_at
+  }));
+
+  const allRecords = [...(attendanceRecords || []), ...normalizedNoShows];
+  const participantIds = [...new Set(allRecords.map((a: any) => a.participant_id))];
+
+  // Fetch participant details for all involved
   const { data: participantData, error: participantFetchError } = await supabase
     .from('participants')
     .select('id, name, email, is_blocklisted, blocklist_reason')
@@ -181,7 +197,7 @@ export async function deleteAllEventParticipants(eventId: string): Promise<{ del
     createdAt: Date.now(),
     used: false,
     participants: (participantData || []) as DeleteBackup['participants'],
-    attendance: (attendanceRecords || []).map((rec: any) => ({
+    attendance: allRecords.map((rec: any) => ({
       id: rec.id,
       event_id: rec.event_id,
       participant_id: rec.participant_id,
@@ -193,16 +209,23 @@ export async function deleteAllEventParticipants(eventId: string): Promise<{ del
     })) as DeleteBackup['attendance'],
   });
 
-  // Delete attendance for the event
-  const { data: deletedAttendance, error: attendanceDeleteError } = await supabase
+  // Delete from attendance
+  const { error: attendanceDeleteError } = await supabase
     .from('attendance')
     .delete()
-    .eq('event_id', eventId)
-    .select('id, participant_id');
+    .eq('event_id', eventId);
 
   if (attendanceDeleteError) throw new Error(`Failed to delete attendance records: ${attendanceDeleteError.message}`);
 
-  // After removing attendance for this event, delete participants that no longer have any attendance anywhere
+  // Delete from no_shows
+  const { error: noShowDeleteError } = await supabase
+    .from('no_shows')
+    .delete()
+    .eq('event_id', eventId);
+
+  if (noShowDeleteError) throw new Error(`Failed to delete no-show records: ${noShowDeleteError.message}`);
+
+  // Check for remaining references in attendance
   const { data: remainingAttendance, error: remainingError } = await supabase
     .from('attendance')
     .select('participant_id')
@@ -210,7 +233,19 @@ export async function deleteAllEventParticipants(eventId: string): Promise<{ del
 
   if (remainingError) throw new Error(`Failed to check remaining attendance: ${remainingError.message}`);
 
-  const stillReferenced = new Set((remainingAttendance || []).map((r: any) => r.participant_id));
+  // Check for remaining references in no_shows
+  const { data: remainingNoShows, error: remainingNoShowsError } = await supabase
+    .from('no_shows')
+    .select('participant_id')
+    .in('participant_id', participantIds);
+
+  if (remainingNoShowsError) throw new Error(`Failed to check remaining no-shows: ${remainingNoShowsError.message}`);
+
+  const stillReferenced = new Set([
+    ...(remainingAttendance || []).map((r: any) => r.participant_id),
+    ...(remainingNoShows || []).map((r: any) => r.participant_id)
+  ]);
+
   const deletableParticipantIds = participantIds.filter(id => !stillReferenced.has(id));
 
   if (deletableParticipantIds.length > 0) {
@@ -239,7 +274,7 @@ export async function deleteSelectedParticipants(
     return { deleted: 0 };
   }
 
-  // Delete attendance records for these participants in the event
+  // Delete attendance records
   const { error: attendanceError } = await supabase
     .from('attendance')
     .delete()
@@ -250,13 +285,32 @@ export async function deleteSelectedParticipants(
     throw new Error(`Failed to delete attendance records: ${attendanceError.message}`);
   }
 
+  // Delete no-show records
+  const { error: noShowError } = await supabase
+    .from('no_shows')
+    .delete()
+    .eq('event_id', eventId)
+    .in('participant_id', participantIds);
+
+  if (noShowError) {
+    throw new Error(`Failed to delete no-show records: ${noShowError.message}`);
+  }
+
   // Delete the participants themselves
+  // Note: This might fail if they are referenced in other events, which is expected/safe
   const { error: deleteError } = await supabase
     .from('participants')
     .delete()
     .in('id', participantIds);
 
-  if (deleteError) throw new Error(`Failed to delete participants: ${deleteError.message}`);
+  if (deleteError) {
+    // If we fail to delete participant due to FK (other events), that's fine.
+    // We successfully removed them from THIS event (attendance/no_shows).
+    // So we don't throw an error here, unless it's something else.
+    if (!deleteError.message.includes('foreign key constraint')) {
+      throw new Error(`Failed to delete participants: ${deleteError.message}`);
+    }
+  }
 
   return { deleted: participantIds.length };
 }
@@ -268,13 +322,29 @@ export async function deleteSelectedParticipants(
 export async function deleteAllEventAttendance(eventId: string): Promise<{ deleted: number; undoToken: string }> {
   const supabase = getSupabaseClient();
 
-  // Backup attendance for event with participant info
+  // Backup attendance
   const { data: attendanceRecords, error: attendanceFetchError } = await supabase
     .from('attendance')
-    .select(`id, event_id, participant_id, status, marked_at, created_at, participants(id, name, email)`) // join for email
+    .select(`id, event_id, participant_id, status, marked_at, created_at, participants(id, name, email)`)
     .eq('event_id', eventId);
 
   if (attendanceFetchError) throw new Error(`Failed to fetch attendance: ${attendanceFetchError.message}`);
+
+  // Backup no-shows
+  const { data: noShowRecords, error: noShowFetchError } = await supabase
+    .from('no_shows')
+    .select(`id, event_id, participant_id, created_at, participants(id, name, email)`)
+    .eq('event_id', eventId);
+
+  if (noShowFetchError) throw new Error(`Failed to fetch no-shows: ${noShowFetchError.message}`);
+
+  const normalizedNoShows = (noShowRecords || []).map((r: any) => ({
+    ...r,
+    status: 'not_attended',
+    marked_at: r.created_at
+  }));
+
+  const allRecords = [...(attendanceRecords || []), ...normalizedNoShows];
 
   const undoToken = createUndoToken();
   setBackup(eventId, {
@@ -282,7 +352,7 @@ export async function deleteAllEventAttendance(eventId: string): Promise<{ delet
     undoToken,
     createdAt: Date.now(),
     used: false,
-    attendance: (attendanceRecords || []).map((rec: any) => ({
+    attendance: allRecords.map((rec: any) => ({
       id: rec.id,
       event_id: rec.event_id,
       participant_id: rec.participant_id,
@@ -294,7 +364,7 @@ export async function deleteAllEventAttendance(eventId: string): Promise<{ delet
     })),
   });
 
-  const { data, error: deleteError } = await supabase
+  const { data: delAtt, error: deleteError } = await supabase
     .from('attendance')
     .delete()
     .eq('event_id', eventId)
@@ -302,7 +372,15 @@ export async function deleteAllEventAttendance(eventId: string): Promise<{ delet
 
   if (deleteError) throw new Error(`Failed to delete attendance: ${deleteError.message}`);
 
-  return { deleted: data?.length || 0, undoToken };
+  const { data: delNoShows, error: deleteNoShowError } = await supabase
+    .from('no_shows')
+    .delete()
+    .eq('event_id', eventId)
+    .select();
+
+  if (deleteNoShowError) throw new Error(`Failed to delete no-shows: ${deleteNoShowError.message}`);
+
+  return { deleted: (delAtt?.length || 0) + (delNoShows?.length || 0), undoToken };
 }
 
 /**
@@ -394,24 +472,39 @@ export async function undoLastDelete(
     // Restore attendance for this event, linking to current participant IDs
     for (const a of backup.attendance || []) {
       const mappedParticipantId = idMap.get(a.participant_id) || a.participant_id;
-      // Check if attendance already exists
+
+      const targetTable = a.status === 'attended' ? 'attendance' : 'no_shows';
+
+      // Check if record already exists
       const { data: existing } = await supabase
-        .from('attendance')
+        .from(targetTable)
         .select('id')
         .eq('event_id', eventId)
         .eq('participant_id', mappedParticipantId)
         .single();
 
       if (!existing) {
-        const { error: insertError } = await supabase
-          .from('attendance')
-          .insert({
-            event_id: eventId,
-            participant_id: mappedParticipantId,
-            status: a.status,
-            marked_at: a.marked_at || new Date().toISOString(),
-          });
-        if (insertError) throw new Error(`Failed to restore attendance: ${insertError.message}`);
+        if (targetTable === 'attendance') {
+          const { error: insertError } = await supabase
+            .from('attendance')
+            .insert({
+              event_id: eventId,
+              participant_id: mappedParticipantId,
+              status: 'attended',
+              marked_at: a.marked_at || new Date().toISOString(),
+            });
+          if (insertError) throw new Error(`Failed to restore attendance: ${insertError.message}`);
+        } else {
+          // no_shows
+          const { error: insertError } = await supabase
+            .from('no_shows')
+            .insert({
+              event_id: eventId,
+              participant_id: mappedParticipantId,
+              created_at: a.marked_at || new Date().toISOString(),
+            });
+          if (insertError) throw new Error(`Failed to restore no-show: ${insertError.message}`);
+        }
         restored++;
       }
     }
@@ -460,24 +553,39 @@ export async function undoLastDelete(
         }
       }
 
-      // Check if attendance exists; if not, re-insert
-      const { data: existingAttendance } = await supabase
-        .from('attendance')
+      // Check if attendance/no-show exists; if not, re-insert
+      // Determine target table based on status
+      const targetTable = a.status === 'attended' ? 'attendance' : 'no_shows';
+
+      const { data: existingRecord } = await supabase
+        .from(targetTable)
         .select('id')
         .eq('event_id', eventId)
         .eq('participant_id', participantId)
         .single();
 
-      if (!existingAttendance) {
-        const { error: insertError } = await supabase
-          .from('attendance')
-          .insert({
-            event_id: eventId,
-            participant_id: participantId,
-            status: a.status,
-            marked_at: a.marked_at || new Date().toISOString(),
-          });
-        if (insertError) throw new Error(`Failed to restore attendance: ${insertError.message}`);
+      if (!existingRecord) {
+        if (targetTable === 'attendance') {
+          const { error: insertError } = await supabase
+            .from('attendance')
+            .insert({
+              event_id: eventId,
+              participant_id: participantId,
+              status: 'attended',
+              marked_at: a.marked_at || new Date().toISOString(),
+            });
+          if (insertError) throw new Error(`Failed to restore attendance: ${insertError.message}`);
+        } else {
+          // no_shows
+          const { error: insertError } = await supabase
+            .from('no_shows')
+            .insert({
+              event_id: eventId,
+              participant_id: participantId,
+              created_at: a.marked_at || new Date().toISOString(), // Use marked_at as created_at for no_shows restoration
+            });
+          if (insertError) throw new Error(`Failed to restore no-show: ${insertError.message}`);
+        }
         restored++;
       }
     }
