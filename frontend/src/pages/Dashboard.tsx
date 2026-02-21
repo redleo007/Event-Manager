@@ -124,7 +124,7 @@ export function Dashboard() {
   }, []);
 
   useEffect(() => {
-    document.title = "Dashboard - TechNexus Community";
+    document.title = "Dashboard - Eventz";
     loadDashboardData(true, false);
 
     // Auto-refresh every 30s (reduced frequency for performance)

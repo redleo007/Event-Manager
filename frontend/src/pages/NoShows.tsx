@@ -59,7 +59,7 @@ export function NoShows() {
   /* ================= LOAD ON MOUNT ================= */
 
   useEffect(() => {
-    document.title = 'No Shows - TechNexus Community';
+    document.title = 'No Shows - Eventz';
     loadData();
   }, []);
 

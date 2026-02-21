@@ -28,7 +28,7 @@ export function ImportAttendance() {
   const [activeTab, setActiveTab] = useState<'participants' | 'attendance' | 'delete'>('participants');
 
   useEffect(() => {
-    document.title = 'Import Data - TechNexus Community';
+    document.title = 'Import Data - Eventz';
   }, []);
 
   // Participants import state

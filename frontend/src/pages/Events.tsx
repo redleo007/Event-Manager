@@ -24,7 +24,7 @@ export function Events() {
   });
   
   useEffect(() => {
-    document.title = 'Events - TechNexus Community';
+    document.title = 'Events - Eventz';
   }, []);
   const [formData, setFormData] = useState({
     name: '',

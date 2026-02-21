@@ -49,7 +49,7 @@ export function EventsHistory() {
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
-    document.title = 'Events History - TechNexus Community';
+    document.title = 'Events History - Eventz';
   }, []);
 
   const { data: events, loading } = useAsync<Event[]>(

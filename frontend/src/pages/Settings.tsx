@@ -19,7 +19,7 @@ export function Settings() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    document.title = 'Settings - TechNexus Community';
+    document.title = 'Settings - Eventz';
   }, []);
 
   useEffect(() => {

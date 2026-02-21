@@ -26,7 +26,7 @@ export function Blocklist() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    document.title = "Blocklist - TechNexus Community";
+    document.title = "Blocklist - Eventz";
     loadBlocklist();
     loadParticipants();
   }, []);
