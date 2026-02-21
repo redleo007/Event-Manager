@@ -134,7 +134,11 @@ export function Layout({ children, onLogout }: LayoutProps) {
 
   return (
     <div className="layout-container">
-      <Navbar onLogout={onLogout} onSidebarToggle={handleSidebarToggle} />
+      <Navbar
+        onLogout={onLogout}
+        onSidebarToggle={handleSidebarToggle}
+        pendingAdminCount={user?.role === 'admin' ? pendingAdmins.length : 0}
+      />
       <div className="layout-main">
         <Sidebar isOpen={sidebarOpen} isCollapsed={sidebarCollapsed} onClose={handleSidebarClose} />
         <main className="main-content">

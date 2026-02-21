@@ -6,9 +6,10 @@ import { useAuth } from '../context/AuthContext';
 interface NavbarProps {
   onLogout: () => void;
   onSidebarToggle: () => void;
+  pendingAdminCount?: number;
 }
 
-export function Navbar({ onLogout, onSidebarToggle }: NavbarProps) {
+export function Navbar({ onLogout, onSidebarToggle, pendingAdminCount = 0 }: NavbarProps) {
   const { user, isReadOnlyUser } = useAuth();
   const displayName = user?.name || user?.email || 'User';
 
@@ -33,6 +34,12 @@ export function Navbar({ onLogout, onSidebarToggle }: NavbarProps) {
 
       {/* Right: User Info & Logout */}
       <div className="navbar-right">
+        {pendingAdminCount > 0 && (
+          <div className="notif-bell" title={`${pendingAdminCount} admin approval${pendingAdminCount > 1 ? 's' : ''}`}>
+            <Icon name="bell" alt="Pending admin approvals" size="sm" />
+            <span className="notif-badge">{pendingAdminCount}</span>
+          </div>
+        )}
         <div className="user-info">
           <Icon name="user" alt="User" />
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
