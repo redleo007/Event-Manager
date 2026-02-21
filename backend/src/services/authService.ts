@@ -185,4 +185,21 @@ export const approveAdmin = async (userId: string, approverId: string): Promise<
   return data as User;
 };
 
+export const listPendingAdmins = async (): Promise<PublicUser[]> => {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from(USERS_TABLE)
+    .select('*')
+    .eq('role', 'admin')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    throw new Error(`Failed to load pending admins: ${error.message}`);
+  }
+
+  const users = (data as User[]) || [];
+  return users.map(toPublicUser);
+};
+
 export const toSafeUser = (user: User): PublicUser => toPublicUser(user);

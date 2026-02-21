@@ -85,6 +85,7 @@ export const authAPI = {
   login: (data: { email: string; password: string; mode?: 'admin' | 'user' }) => api.post('/auth/login', data),
   signup: (data: { name: string; email: string; password: string; confirmPassword: string; role?: 'admin' | 'user' }) => api.post('/auth/signup', data),
   me: () => api.get('/auth/me'),
+  getPendingAdmins: () => api.get('/auth/admin/pending'),
   approveAdmin: (userId: string) => api.post('/auth/admin/approve', { user_id: userId }),
 };
 

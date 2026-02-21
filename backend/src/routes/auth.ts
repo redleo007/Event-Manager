@@ -88,6 +88,16 @@ router.get(
   })
 );
 
+router.get(
+  '/admin/pending',
+  authenticateToken,
+  requireAdmin,
+  asyncHandler(async (_req: Request, res: Response) => {
+    const pending = await authService.listPendingAdmins();
+    res.json(successResponse({ pending }));
+  })
+);
+
 router.post(
   '/admin/approve',
   authenticateToken,
