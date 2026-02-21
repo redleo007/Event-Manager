@@ -4,6 +4,7 @@ import { eventsAPI } from '../api/client';
 import { useAsync } from '../utils/hooks';
 import { formatDate } from '../utils/formatters';
 import './Events.css';
+import { useAuth } from '../context/AuthContext';
 
 interface Event {
   id: string;
@@ -22,6 +23,7 @@ export function Events() {
     id: null,
     name: '',
   });
+  const { canWrite, isReadOnlyUser } = useAuth();
   
   useEffect(() => {
     document.title = 'Events - Eventz';
@@ -46,6 +48,11 @@ export function Events() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!canWrite) {
+      setMessage({ type: 'error', text: 'Write access is limited to admins.' });
+      return;
+    }
 
     if (!formData.name || !formData.date) {
       setMessage({ type: 'error', text: 'Event name and date are required' });
@@ -74,6 +81,7 @@ export function Events() {
   };
 
   const handleEdit = (event: Event) => {
+    if (!canWrite) return;
     setFormData({
       name: event.name,
       date: event.date.split('T')[0],
@@ -85,6 +93,7 @@ export function Events() {
   };
 
   const handleDeleteClick = (event: Event) => {
+    if (!canWrite) return;
     setDeleteConfirm({ show: true, id: event.id, name: event.name });
   };
 
@@ -131,15 +140,19 @@ export function Events() {
           <h1>Events Management</h1>
           <p>Create and manage events</p>
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            setShowForm(!showForm);
-            if (showForm) handleCancel();
-          }}
-        >
-          {showForm ? <><Icon name="close" alt="Cancel" sizePx={16} /> Cancel</> : <><Icon name="add" alt="New" sizePx={16} /> New Event</>}
-        </button>
+        {canWrite ? (
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              setShowForm(!showForm);
+              if (showForm) handleCancel();
+            }}
+          >
+            {showForm ? <><Icon name="close" alt="Cancel" sizePx={16} /> Cancel</> : <><Icon name="add" alt="New" sizePx={16} /> New Event</>}
+          </button>
+        ) : (
+          <div className="read-only-chip">Read-only access</div>
+        )}
       </div>
 
       {message && (
@@ -148,7 +161,7 @@ export function Events() {
         </div>
       )}
 
-      {showForm && (
+      {showForm && canWrite && (
         <div className="event-form card">
           <h2>{editingId ? 'Edit Event' : 'Create New Event'}</h2>
           <form onSubmit={handleSubmit}>
@@ -240,20 +253,22 @@ export function Events() {
                   <p className="event-description">{event.description}</p>
                 )}
 
-                <div className="event-actions">
-                  <button
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => handleEdit(event)}
-                  >
-                    <Icon name="edit" alt="Edit" sizePx={16} /> Edit
-                  </button>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => handleDeleteClick(event)}
-                  >
-                    <Icon name="delete" alt="Delete" sizePx={16} /> Delete
-                  </button>
-                </div>
+                {canWrite && (
+                  <div className="event-actions">
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => handleEdit(event)}
+                    >
+                      <Icon name="edit" alt="Edit" sizePx={16} /> Edit
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => handleDeleteClick(event)}
+                    >
+                      <Icon name="delete" alt="Delete" sizePx={16} /> Delete
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

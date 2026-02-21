@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Icon from "../components/Icon";
 import { blocklistAPI, participantsAPI } from "../api/client";
 import "./Blocklist.css";
+import { useAuth } from "../context/AuthContext";
 
 interface BlocklistEntry {
   id: string;
@@ -24,6 +25,7 @@ export function Blocklist() {
   const [reason, setReason] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name?: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const { canWrite } = useAuth();
 
   useEffect(() => {
     document.title = "Blocklist - Eventz";
@@ -81,6 +83,11 @@ export function Blocklist() {
   const confirmRemove = async () => {
     if (!deleteTarget) return;
 
+    if (!canWrite) {
+      setMessage({ type: "error", text: "Admin access is required to remove blocklist entries." });
+      return;
+    }
+
     setDeleting(true);
     try {
       await blocklistAPI.remove(deleteTarget.id);
@@ -96,6 +103,11 @@ export function Blocklist() {
   };
 
   const handleAdd = async () => {
+    if (!canWrite) {
+      setMessage({ type: "error", text: "Admin access is required to modify the blocklist." });
+      return;
+    }
+
     if (!selectedParticipantId || !reason.trim()) {
       setMessage({ type: "error", text: "Select a participant and enter a reason" });
       return;
@@ -183,16 +195,20 @@ export function Blocklist() {
             />
           </div>
           <div className="action-buttons">
-            <button className="btn btn-secondary btn-sm" onClick={() => setShowAddForm(!showAddForm)}>
-              <Icon name="add" alt="Add" size="sm" /> Add
-            </button>
+            {canWrite ? (
+              <button className="btn btn-secondary btn-sm" onClick={() => setShowAddForm(!showAddForm)}>
+                <Icon name="add" alt="Add" size="sm" /> Add
+              </button>
+            ) : (
+              <span className="read-only-chip">Read-only</span>
+            )}
             <button className="btn btn-primary btn-sm" onClick={handleExport}>
               <Icon name="download" alt="Export" size="sm" /> Export
             </button>
           </div>
         </div>
 
-        {showAddForm && (
+        {showAddForm && canWrite && (
           <div className="add-form-section">
             <h3>Add to Blocklist</h3>
             <div className="add-form-grid">
@@ -262,18 +278,20 @@ export function Blocklist() {
                     <td><span className="badge badge-warning">{entry.reason}</span></td>
                     <td>{new Date(entry.created_at).toLocaleDateString()}</td>
                     <td>
-                      <button
-                        className="btn btn-danger btn-sm"
-                        onClick={() =>
-                          setDeleteTarget({
-                            id: entry.participant_id,
-                            name: entry.participants?.name,
-                          })
-                        }
-                        title="Remove from blocklist"
-                      >
-                        <Icon name="delete" alt="Remove" size="sm" />
-                      </button>
+                      {canWrite && (
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() =>
+                            setDeleteTarget({
+                              id: entry.participant_id,
+                              name: entry.participants?.name,
+                            })
+                          }
+                          title="Remove from blocklist"
+                        >
+                          <Icon name="delete" alt="Remove" size="sm" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

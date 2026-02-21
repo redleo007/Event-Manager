@@ -372,6 +372,15 @@
   gap: 20px;
 }
 
+.read-only-chip {
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from './Icon';
 import './Navbar.css';
+import { useAuth } from '../context/AuthContext';
 
 interface NavbarProps {
   onLogout: () => void;
@@ -9,14 +9,8 @@ interface NavbarProps {
 }
 
 export function Navbar({ onLogout, onSidebarToggle }: NavbarProps) {
-  const [adminUser, setAdminUser] = useState('');
-
-  useEffect(() => {
-    const user = localStorage.getItem('admin_user');
-    if (user) {
-      setAdminUser(user);
-    }
-  }, []);
+  const { user, isReadOnlyUser } = useAuth();
+  const displayName = user?.name || user?.email || 'User';
 
   return (
     <nav className="navbar">
@@ -41,7 +35,13 @@ export function Navbar({ onLogout, onSidebarToggle }: NavbarProps) {
       <div className="navbar-right">
         <div className="user-info">
           <Icon name="user" alt="User" />
-          <span className="user-name">{adminUser || 'Admin'}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
+            <span className="user-name">{displayName}</span>
+            <span className="user-role" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              {user?.role === 'admin' ? 'Admin' : 'User (read-only)'}
+              {isReadOnlyUser ? ' • Limited' : ''}
+            </span>
+          </div>
         </div>
         <button 
           className="logout-btn"

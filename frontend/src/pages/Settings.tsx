@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Icon from '../components/Icon';
 import { settingsAPI } from '../api/client';
 import './Settings.css';
+import { useAuth } from '../context/AuthContext';
 
 interface Settings {
   no_show_limit: number;
@@ -17,6 +18,7 @@ export function Settings() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const { canWrite } = useAuth();
 
   useEffect(() => {
     document.title = 'Settings - Eventz';
@@ -57,6 +59,11 @@ export function Settings() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!canWrite) {
+      setMessage({ type: 'error', text: 'Settings can only be updated by admins.' });
+      return;
+    }
 
     if (formData.no_show_limit < 1) {
       setMessage({ type: 'error', text: 'No-show limit must be at least 1' });
@@ -101,6 +108,13 @@ export function Settings() {
         <p>Configure global system settings</p>
       </div>
 
+      {!canWrite && (
+        <div className="alert alert-warning">
+          <Icon name="warning" alt="Read only" sizePx={18} />
+          Settings are read-only for user accounts.
+        </div>
+      )}
+
       {message && (
         <div className={`alert alert-${message.type}`}>
           {message.text}
@@ -124,6 +138,7 @@ export function Settings() {
                   onChange={handleInputChange}
                   min="1"
                   max="10"
+                  disabled={saving || !canWrite}
                 />
                 <span className="input-addon">no-shows</span>
               </div>
@@ -140,6 +155,7 @@ export function Settings() {
                   name="auto_block_enabled"
                   checked={formData.auto_block_enabled}
                   onChange={handleInputChange}
+                  disabled={saving || !canWrite}
                 />
                 <span className="checkbox-text">Enable Automatic Blocking</span>
               </label>
@@ -150,14 +166,14 @@ export function Settings() {
             </div>
 
             <div className="form-actions">
-              <button type="submit" className="btn btn-primary btn-lg" disabled={saving}>
+              <button type="submit" className="btn btn-primary btn-lg" disabled={saving || !canWrite}>
                 {saving ? <><Icon name="loader" alt="Saving" sizePx={18} spin /> Saving...</> : <><Icon name="save" alt="Save" sizePx={18} /> Save Settings</>}
               </button>
               <button
                 type="button"
                 className="btn btn-secondary btn-lg"
                 onClick={handleReset}
-                disabled={saving}
+                disabled={saving || !canWrite}
               >
                 Reset
               </button>

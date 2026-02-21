@@ -4,6 +4,7 @@ import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { participantsAPI, attendanceAPI, eventsAPI } from '../api/client';
 import { useAsync } from '../utils/hooks';
+import { useAuth } from '../context/AuthContext';
 
 
 interface ParsedParticipant {
@@ -26,6 +27,8 @@ interface Event {
 
 export function ImportAttendance() {
   const [activeTab, setActiveTab] = useState<'participants' | 'attendance' | 'delete'>('participants');
+  const { canWrite } = useAuth();
+  const isReadOnly = !canWrite;
 
   useEffect(() => {
     document.title = 'Import Data - Eventz';
@@ -242,6 +245,10 @@ export function ImportAttendance() {
 
   // Handle delete all participants
   const handleDeleteAllParticipants = () => {
+    if (!canWrite) {
+      setDeleteMessage({ type: 'error', text: 'Admin access is required to delete participants.' });
+      return;
+    }
     if (!selectedEventDelete) {
       setDeleteMessage({ type: 'error', text: 'Please select an event first.' });
       return;
@@ -254,6 +261,10 @@ export function ImportAttendance() {
 
   // Handle delete all attendance
   const handleDeleteAllAttendance = () => {
+    if (!canWrite) {
+      setDeleteMessage({ type: 'error', text: 'Admin access is required to clear attendance.' });
+      return;
+    }
     if (!selectedEventDelete) {
       setDeleteMessage({ type: 'error', text: 'Please select an event first.' });
       return;
@@ -266,6 +277,10 @@ export function ImportAttendance() {
 
   // Perform delete
   const performDelete = async () => {
+    if (!canWrite) {
+      setDeleteMessage({ type: 'error', text: 'Write access is required.' });
+      return;
+    }
     if (!deleteConfirmation.type || !selectedEventDelete) return;
 
     try {
@@ -329,6 +344,10 @@ export function ImportAttendance() {
 
   // Import participants
   const handleImportParticipants = async () => {
+    if (!canWrite) {
+      setParticipantMessage({ type: 'error', text: 'Import is restricted to admins.' });
+      return;
+    }
     if (participantFileData.length === 0) {
       setParticipantMessage({ type: 'error', text: 'No data to import. Please select a CSV file.' });
       return;
@@ -388,6 +407,10 @@ export function ImportAttendance() {
 
   // Import attendance
   const handleImportAttendance = async () => {
+    if (!canWrite) {
+      setAttendanceMessage({ type: 'error', text: 'Import is restricted to admins.' });
+      return;
+    }
     if (attendanceFileData.length === 0) {
       setAttendanceMessage({ type: 'error', text: 'No data to import. Please select a CSV file.' });
       return;
@@ -506,6 +529,13 @@ export function ImportAttendance() {
         <p>Bulk import participants and attendance records for your events.</p>
       </div>
 
+      {isReadOnly && (
+        <div className="data-importer-alert data-importer-alert-warning" style={{ marginBottom: 16 }}>
+          <Icon name="warning" alt="Read only" sizePx={20} />
+          <span>Read-only access: importing and deletion actions are available to admins only.</span>
+        </div>
+      )}
+
       <div className="data-importer-tabs-wrapper">
         <div className="data-importer-tabs">
           <button
@@ -577,6 +607,7 @@ export function ImportAttendance() {
                 className="data-importer-file-input"
                 accept=".csv,.xlsx,.xls"
                 onChange={handleParticipantFileSelect}
+                disabled={isReadOnly}
                 id="participant-file-upload"
               />
               <div className="data-importer-drop-area">
@@ -643,14 +674,14 @@ export function ImportAttendance() {
                 <button
                   className="data-importer-btn data-importer-btn-primary data-importer-btn-expand"
                   onClick={handleImportParticipants}
-                  disabled={importingParticipants}
+                  disabled={importingParticipants || isReadOnly}
                 >
                   {importingParticipants ? 'Importing...' : 'Start Import'}
                 </button>
                 <button
                   className="data-importer-btn data-importer-btn-secondary"
                   onClick={() => setParticipantFileData([])}
-                  disabled={importingParticipants}
+                  disabled={importingParticipants || isReadOnly}
                 >
                   Cancel
                 </button>
@@ -702,6 +733,7 @@ export function ImportAttendance() {
                 className="data-importer-file-input"
                 accept=".csv,.xlsx,.xls"
                 onChange={handleAttendanceFileSelect}
+                disabled={isReadOnly}
                 id="attendance-file-upload"
               />
               <div className="data-importer-drop-area">
@@ -775,14 +807,14 @@ export function ImportAttendance() {
                 <button
                   className="data-importer-btn data-importer-btn-primary data-importer-btn-expand"
                   onClick={handleImportAttendance}
-                  disabled={importingAttendance}
+                  disabled={importingAttendance || isReadOnly}
                 >
                   {importingAttendance ? 'Importing...' : 'Start Import'}
                 </button>
                 <button
                   className="data-importer-btn data-importer-btn-secondary"
                   onClick={() => setAttendanceFileData([])}
-                  disabled={importingAttendance}
+                  disabled={importingAttendance || isReadOnly}
                 >
                   Cancel
                 </button>
@@ -805,6 +837,7 @@ export function ImportAttendance() {
                   <button
                     className="data-importer-btn-secondary"
                     onClick={handleUndoDelete}
+                    disabled={isReadOnly}
                     style={{ marginLeft: 16, padding: '4px 12px', fontSize: '0.8rem', borderRadius: 4, cursor: 'pointer' }}
                   >
                     Undo
@@ -846,7 +879,7 @@ export function ImportAttendance() {
                 <button
                   className="data-importer-btn data-importer-btn-danger"
                   onClick={handleDeleteAllParticipants}
-                  disabled={!selectedEventDelete}
+                  disabled={!selectedEventDelete || isReadOnly}
                   style={{ width: '100%', padding: '12px' }}
                 >
                   Delete Participants
@@ -861,7 +894,7 @@ export function ImportAttendance() {
                 <button
                   className="data-importer-btn data-importer-btn-danger"
                   onClick={handleDeleteAllAttendance}
-                  disabled={!selectedEventDelete}
+                  disabled={!selectedEventDelete || isReadOnly}
                   style={{ width: '100%', padding: '12px' }}
                 >
                   Clear Attendance Info
@@ -909,6 +942,7 @@ export function ImportAttendance() {
                 className="data-importer-btn data-importer-btn-danger"
                 style={{ padding: '10px 20px', fontSize: '0.9rem' }}
                 onClick={performDelete}
+                disabled={isReadOnly}
               >
                 Confirm Delete
               </button>

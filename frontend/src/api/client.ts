@@ -16,6 +16,29 @@ type CachedConfig = InternalAxiosRequestConfig & { cache?: CachePolicy };
 
 const responseCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
 const DEFAULT_CACHE_TTL = 15000; // 15 seconds keeps UI snappy without going stale
+export const AUTH_TOKEN_KEY = 'auth_token';
+export const AUTH_USER_KEY = 'auth_user';
+
+const getStoredToken = (): string | null => {
+  try {
+    return localStorage.getItem(AUTH_TOKEN_KEY);
+  } catch (err) {
+    console.warn('[auth] Unable to read token from storage', err);
+    return null;
+  }
+};
+
+const clearStoredAuth = () => {
+  try {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(AUTH_USER_KEY);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('auth:cleared'));
+    }
+  } catch (err) {
+    console.warn('[auth] Unable to clear auth storage', err);
+  }
+};
 
 const buildCacheKey = (config: CachedConfig) => {
   const method = (config.method ?? 'get').toUpperCase();
@@ -57,9 +80,23 @@ export const api = axios.create({
   },
 });
 
+// Authentication API
+export const authAPI = {
+  login: (data: { email: string; password: string; mode?: 'admin' | 'user' }) => api.post('/auth/login', data),
+  signup: (data: { name: string; email: string; password: string; confirmPassword: string; role?: 'admin' | 'user' }) => api.post('/auth/signup', data),
+  me: () => api.get('/auth/me'),
+  approveAdmin: (userId: string) => api.post('/auth/admin/approve', { user_id: userId }),
+};
+
 // Serve cached GET responses when fresh; fall back to network otherwise
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const cachedConfig = config as CachedConfig;
+  const token = getStoredToken();
+  if (token) {
+    cachedConfig.headers = cachedConfig.headers ?? {};
+    (cachedConfig.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+  }
+
   const method = (cachedConfig.method ?? 'get').toLowerCase();
   const cacheConfig = cachedConfig.cache ?? {};
   const cacheKey = cacheConfig.key ?? buildCacheKey(cachedConfig);
@@ -199,7 +236,14 @@ api.interceptors.response.use(
     };
   },
   (error) => {
+    const status = error.response?.status;
+    if (status === 401 || status === 403) {
+      clearStoredAuth();
+    }
+
     const message = error.response?.data?.error || error.message || 'An error occurred';
-    return Promise.reject(new Error(message));
+    const err = new Error(message) as Error & { status?: number };
+    err.status = status;
+    return Promise.reject(err);
   }
 );

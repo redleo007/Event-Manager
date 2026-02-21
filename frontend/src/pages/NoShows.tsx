@@ -3,6 +3,7 @@ import Icon from '../components/Icon';
 import { participantsAPI, eventsAPI, attendanceAPI } from '../api/client';
 import { formatDateTime } from '../utils/formatters';
 import './NoShows.css';
+import { useAuth } from '../context/AuthContext';
 
 interface NoShowRecord {
   id: string;
@@ -53,6 +54,7 @@ export function NoShows() {
   const [events, setEvents] = useState<Event[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<NoShowRecord | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const { canWrite } = useAuth();
 
   /* ================= LOAD ON MOUNT ================= */
 
@@ -202,6 +204,14 @@ export function NoShows() {
   /* ================= ADD NO-SHOW ================= */
 
   const handleAddNoShow = async () => {
+    if (!canWrite) {
+      setMessage({
+        type: 'error',
+        text: 'Adding no-shows is restricted to admins.',
+      });
+      return;
+    }
+
     if (!selectedParticipantId || !selectedEventId) {
       setMessage({
         type: 'error',
@@ -240,6 +250,11 @@ export function NoShows() {
 
   const handleDeleteNoShow = async () => {
     if (!deleteTarget) return;
+
+    if (!canWrite) {
+      setMessage({ type: 'error', text: 'Only admins can delete no-show records.' });
+      return;
+    }
 
     setDeleting(true);
     try {
@@ -289,6 +304,12 @@ export function NoShows() {
         </div>
       )}
 
+      {!canWrite && (
+        <div className="alert alert-warning" style={{ marginBottom: '12px' }}>
+          <Icon name="warning" alt="Read only" sizePx={18} /> Read-only access: add/delete actions are admin only.
+        </div>
+      )}
+
       {/* ===== STATS ===== */}
       <div className="stats-section">
         <div className="stat-card total-card">
@@ -315,18 +336,22 @@ export function NoShows() {
           </div>
 
           <div className="action-buttons">
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={() => {
-                const nextState = !showAddForm;
-                setShowAddForm(nextState);
-                if (nextState && participants.length === 0) {
-                  loadFormData();
-                }
-              }}
-            >
-              <Icon name="add" alt="Add" sizePx={16} /> Add
-            </button>
+            {canWrite ? (
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => {
+                  const nextState = !showAddForm;
+                  setShowAddForm(nextState);
+                  if (nextState && participants.length === 0) {
+                    loadFormData();
+                  }
+                }}
+              >
+                <Icon name="add" alt="Add" sizePx={16} /> Add
+              </button>
+            ) : (
+              <span className="read-only-chip">Read-only</span>
+            )}
             <button
               className="btn btn-secondary btn-sm"
               onClick={handleExportCSV}
@@ -337,7 +362,7 @@ export function NoShows() {
         </div>
 
         {/* ===== ADD FORM ===== */}
-        {showAddForm && (
+        {showAddForm && canWrite && (
           <div className="add-form-section">
             <h3>Add No-Show</h3>
             <form
@@ -427,14 +452,16 @@ export function NoShows() {
                     <td>{r.events?.name ?? '—'}</td>
                     <td>{r.events?.date ?? '—'}</td>
                     <td>{formatDateTime(r.marked_at)}</td>
-                    <td>
-                      <button
-                        className="btn btn-danger btn-sm"
-                        onClick={() => setDeleteTarget(r)}
-                      >
-                        <Icon name="delete" alt="Delete" sizePx={14} />
-                      </button>
-                    </td>
+                        <td>
+                          {canWrite && (
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() => setDeleteTarget(r)}
+                            >
+                              <Icon name="delete" alt="Delete" sizePx={14} />
+                            </button>
+                          )}
+                        </td>
                   </tr>
                 ))}
               </tbody>

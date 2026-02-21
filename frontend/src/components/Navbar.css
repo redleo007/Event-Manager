@@ -176,6 +176,11 @@
   font-weight: 600;
 }
 
+.user-role {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
 .logout-btn {
   padding: 8px 16px;
   background: rgba(255, 0, 0, 0.1);

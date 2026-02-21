@@ -81,6 +81,13 @@
   margin-bottom: var(--spacing-xl);
 }
 
+.login-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .login-brand {
   display: flex;
   align-items: center;
@@ -129,12 +136,44 @@
   margin: 0;
 }
 
+.login-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.login-tab {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.login-tab.active {
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+  color: #050811;
+  font-weight: 700;
+}
+
 /* ---------- FORM ---------- */
 
 .login-form {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
 }
 
 .form-group {
@@ -192,6 +231,12 @@
   color: var(--neon-magenta);
 }
 
+.alert-success {
+  background: rgba(0, 217, 255, 0.12);
+  border: 1px solid rgba(0, 217, 255, 0.35);
+  color: var(--neon-cyan);
+}
+
 /* ---------- BUTTON ---------- */
 
 .login-button {
@@ -216,6 +261,68 @@
 .login-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.helper-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 8px 0 0 0;
+  line-height: 1.4;
+}
+
+.login-role-toggle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: var(--spacing-md);
+}
+
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.role-chip.active {
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+  color: #050811;
+  font-weight: 700;
+  border-color: transparent;
+}
+
+.role-select {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.role-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.role-option.selected {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 0 2px rgba(0, 217, 255, 0.15);
+}
+
+.role-option input {
+  accent-color: var(--neon-cyan);
 }
 
 /* ---------- FOOTER ---------- */

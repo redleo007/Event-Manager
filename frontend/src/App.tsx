@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
@@ -10,30 +10,15 @@ import { ImportAttendance } from './pages/ImportAttendance';
 import { NoShows } from './pages/NoShows';
 import { Blocklist } from './pages/Blocklist';
 import { Settings } from './pages/Settings';
+import { useAuth } from './context/AuthContext';
 
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const { user, loading, logout } = useAuth();
 
   useEffect(() => {
-    // Check if user is already logged in
-    const authToken = localStorage.getItem('auth_token');
-    if (authToken) {
-      setIsAuthenticated(true);
-    }
-    setLoading(false);
+    document.title = 'Eventz - Event & Attendance Management';
   }, []);
-
-  const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('admin_user');
-    setIsAuthenticated(false);
-  };
 
   if (loading) {
     return (
@@ -56,13 +41,56 @@ function App() {
     );
   }
 
-  if (!isAuthenticated) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
+  if (!user) {
+    return <Login />;
+  }
+
+  if (user.status !== 'approved') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #050811 0%, #0f0f1e 100%)',
+        color: '#fff',
+        padding: '24px',
+      }}>
+        <div style={{
+          maxWidth: 520,
+          width: '100%',
+          background: 'rgba(255, 255, 255, 0.04)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: 12,
+          padding: '24px 28px',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.35)',
+        }}>
+          <h1 style={{ margin: 0, marginBottom: 10 }}>Pending Approval</h1>
+          <p style={{ margin: 0, marginBottom: 14, color: 'rgba(255,255,255,0.75)' }}>
+            Hi {user.name}, your account is awaiting admin approval. You will be notified once it is approved.
+          </p>
+          <button
+            onClick={logout}
+            style={{
+              marginTop: 12,
+              padding: '10px 14px',
+              borderRadius: 8,
+              border: '1px solid rgba(255,255,255,0.2)',
+              background: 'transparent',
+              color: '#fff',
+              cursor: 'pointer',
+            }}
+          >
+            Return to Login
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <Router>
-      <Layout onLogout={handleLogout}>
+      <Layout onLogout={logout}>
         <Routes>
           <Route path="/" element={
             <ErrorBoundary>

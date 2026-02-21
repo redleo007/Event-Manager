@@ -5,8 +5,10 @@ import fs from 'fs';
 import path from 'path';
 import { initializeSupabase } from './utils/supabase';
 import { errorHandler, asyncHandler } from './middleware/errorHandler';
+import { authenticateToken, restrictWritesToAdmins } from './middleware/auth';
 
 // Routes
+import authRouter from './routes/auth';
 import eventsRouter from './routes/events';
 import participantsRouter from './routes/participants';
 import attendanceRouter from './routes/attendance';
@@ -55,6 +57,12 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/health', asyncHandler(async (_req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 }));
+
+// Public auth routes
+app.use('/api/auth', authRouter);
+
+// Authenticated routes (JWT + role-aware write protection)
+app.use('/api', authenticateToken, restrictWritesToAdmins);
 
 // Routes
 app.use('/api/events/:event_id/participants', eventParticipantsRouter);
