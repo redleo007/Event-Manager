@@ -23,7 +23,7 @@ export function Events() {
     id: null,
     name: '',
   });
-  const { canWrite, isReadOnlyUser } = useAuth();
+  const { canWrite } = useAuth();
   
   useEffect(() => {
     document.title = 'Events - Eventz';
