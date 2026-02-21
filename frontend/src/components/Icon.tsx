@@ -63,6 +63,10 @@ const ICONS: Record<string, string> = {
     'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="%2300d9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpolyline points="20 6 9 17 4 12"/%3E%3C/svg%3E',
   bell:
     'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="%2300d9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/%3E%3Cpath d="M13.73 21a2 2 0 0 1-3.46 0"/%3E%3C/svg%3E',
+  eye:
+    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="%2300d9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/%3E%3Ccircle cx="12" cy="12" r="3"/%3E%3C/svg%3E',
+  eyeOff:
+    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="%2300d9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a20.63 20.63 0 0 1 5.11-5.57"/%3E%3Cpath d="M1 1l22 22"/%3E%3Cpath d="M9.88 9.88a3 3 0 0 0 4.24 4.24"/%3E%3Cpath d="M14.12 9.88 12 12"/%3E%3C/svg%3E',
 };
 
 interface IconProps {

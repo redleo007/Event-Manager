@@ -77,6 +77,7 @@ export function Layout({ children, onLogout }: LayoutProps) {
   const [pendingLoading, setPendingLoading] = useState(false);
   const [pendingError, setPendingError] = useState<string | null>(null);
   const [adminApprovalsOpen, setAdminApprovalsOpen] = useState(false);
+  const currentYear = new Date().getFullYear();
 
   const handleSidebarToggle = () => {
     // On desktop: toggle collapse/expand
@@ -222,7 +223,7 @@ export function Layout({ children, onLogout }: LayoutProps) {
             {children}
           </div>
           <footer className="footer">
-            <p>&copy; 2025 Eventz. Production-Ready Event Management System.</p>
+            <p>&copy; {currentYear} Eventz. Production-Ready Event Management System.</p>
           </footer>
         </main>
       </div>

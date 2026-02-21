@@ -14,6 +14,10 @@ export function Login() {
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showSignupConfirmPassword, setShowSignupConfirmPassword] = useState(false);
+
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [signupForm, setSignupForm] = useState({
     name: '',
@@ -157,15 +161,25 @@ export function Login() {
 
               <div className="form-group">
                 <label htmlFor="password">Password</label>
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={loginForm.password}
-                  onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                  disabled={loading}
-                  required
-                />
+                <div className="password-input">
+                  <input
+                    id="password"
+                    type={showLoginPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    value={loginForm.password}
+                    onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                    disabled={loading}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowLoginPassword((prev) => !prev)}
+                    aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+                  >
+                    <Icon name={showLoginPassword ? 'eyeOff' : 'eye'} alt="Toggle password visibility" sizePx={18} />
+                  </button>
+                </div>
               </div>
 
               <button type="submit" className="login-button" disabled={loading}>
@@ -210,29 +224,49 @@ export function Login() {
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="signup-password">Password</label>
-                  <input
-                    id="signup-password"
-                    type="password"
-                    placeholder="Minimum 8 characters"
-                    value={signupForm.password}
-                    onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
-                    disabled={loading}
-                    required
-                    minLength={8}
-                  />
+                  <div className="password-input">
+                    <input
+                      id="signup-password"
+                      type={showSignupPassword ? 'text' : 'password'}
+                      placeholder="Minimum 8 characters"
+                      value={signupForm.password}
+                      onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
+                      disabled={loading}
+                      required
+                      minLength={8}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowSignupPassword((prev) => !prev)}
+                      aria-label={showSignupPassword ? 'Hide password' : 'Show password'}
+                    >
+                      <Icon name={showSignupPassword ? 'eyeOff' : 'eye'} alt="Toggle password visibility" sizePx={18} />
+                    </button>
+                  </div>
                 </div>
                 <div className="form-group">
                   <label htmlFor="signup-confirm">Confirm Password</label>
-                  <input
-                    id="signup-confirm"
-                    type="password"
-                    placeholder="Re-enter password"
-                    value={signupForm.confirmPassword}
-                    onChange={(e) => setSignupForm({ ...signupForm, confirmPassword: e.target.value })}
-                    disabled={loading}
-                    required
-                    minLength={8}
-                  />
+                  <div className="password-input">
+                    <input
+                      id="signup-confirm"
+                      type={showSignupConfirmPassword ? 'text' : 'password'}
+                      placeholder="Re-enter password"
+                      value={signupForm.confirmPassword}
+                      onChange={(e) => setSignupForm({ ...signupForm, confirmPassword: e.target.value })}
+                      disabled={loading}
+                      required
+                      minLength={8}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowSignupConfirmPassword((prev) => !prev)}
+                      aria-label={showSignupConfirmPassword ? 'Hide password' : 'Show password'}
+                    >
+                      <Icon name={showSignupConfirmPassword ? 'eyeOff' : 'eye'} alt="Toggle confirm password visibility" sizePx={18} />
+                    </button>
+                  </div>
                 </div>
               </div>
 
