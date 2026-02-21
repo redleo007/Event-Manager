@@ -76,6 +76,7 @@ export function Layout({ children, onLogout }: LayoutProps) {
   const [pendingAdmins, setPendingAdmins] = useState<{ id: string; name: string; email: string; created_at?: string }[]>([]);
   const [pendingLoading, setPendingLoading] = useState(false);
   const [pendingError, setPendingError] = useState<string | null>(null);
+  const [adminApprovalsOpen, setAdminApprovalsOpen] = useState(false);
 
   const handleSidebarToggle = () => {
     // On desktop: toggle collapse/expand
@@ -91,6 +92,12 @@ export function Layout({ children, onLogout }: LayoutProps) {
   const handleSidebarClose = () => {
     setSidebarOpen(false);
   };
+
+  useEffect(() => {
+    if (user?.role !== 'admin') {
+      setAdminApprovalsOpen(false);
+    }
+  }, [user?.role]);
 
   useEffect(() => {
     const loadPending = async () => {
@@ -116,6 +123,11 @@ export function Layout({ children, onLogout }: LayoutProps) {
     loadPending();
   }, [user?.id, user?.role]);
 
+  const handleAdminBellClick = () => {
+    if (user?.role !== 'admin') return;
+    setAdminApprovalsOpen((open) => !open);
+  };
+
   const handleApprove = async (userId: string) => {
     setPendingLoading(true);
     setPendingError(null);
@@ -138,12 +150,14 @@ export function Layout({ children, onLogout }: LayoutProps) {
         onLogout={onLogout}
         onSidebarToggle={handleSidebarToggle}
         pendingAdminCount={user?.role === 'admin' ? pendingAdmins.length : 0}
+        onAdminBellClick={handleAdminBellClick}
+        adminBellActive={adminApprovalsOpen}
       />
       <div className="layout-main">
         <Sidebar isOpen={sidebarOpen} isCollapsed={sidebarCollapsed} onClose={handleSidebarClose} />
         <main className="main-content">
           <div className="container">
-            {user?.role === 'admin' && (
+            {user?.role === 'admin' && adminApprovalsOpen && (
               <div className="admin-approvals-banner">
                 <div className="admin-approvals-header">
                   <div>

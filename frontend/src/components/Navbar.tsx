@@ -7,11 +7,14 @@ interface NavbarProps {
   onLogout: () => void;
   onSidebarToggle: () => void;
   pendingAdminCount?: number;
+  onAdminBellClick?: () => void;
+  adminBellActive?: boolean;
 }
 
-export function Navbar({ onLogout, onSidebarToggle, pendingAdminCount = 0 }: NavbarProps) {
+export function Navbar({ onLogout, onSidebarToggle, pendingAdminCount = 0, onAdminBellClick, adminBellActive }: NavbarProps) {
   const { user, isReadOnlyUser } = useAuth();
   const displayName = user?.name || user?.email || 'User';
+  const isAdmin = user?.role === 'admin';
 
   return (
     <nav className="navbar">
@@ -34,11 +37,18 @@ export function Navbar({ onLogout, onSidebarToggle, pendingAdminCount = 0 }: Nav
 
       {/* Right: User Info & Logout */}
       <div className="navbar-right">
-        {pendingAdminCount > 0 && (
-          <div className="notif-bell" title={`${pendingAdminCount} admin approval${pendingAdminCount > 1 ? 's' : ''}`}>
+        {isAdmin && (
+          <button
+            type="button"
+            className={`notif-bell ${adminBellActive ? 'active' : ''}`}
+            title={pendingAdminCount > 0 ? `${pendingAdminCount} admin approval${pendingAdminCount > 1 ? 's' : ''}` : 'Admin approvals'}
+            aria-label="Admin approvals"
+            aria-pressed={adminBellActive}
+            onClick={onAdminBellClick}
+          >
             <Icon name="bell" alt="Pending admin approvals" size="sm" />
-            <span className="notif-badge">{pendingAdminCount}</span>
-          </div>
+            {pendingAdminCount > 0 && <span className="notif-badge">{pendingAdminCount}</span>}
+          </button>
         )}
         <div className="user-info">
           <Icon name="user" alt="User" />
