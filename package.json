@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "start": "npm --prefix backend run start",
+    "build": "npm --prefix backend run build"
+  },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6"
