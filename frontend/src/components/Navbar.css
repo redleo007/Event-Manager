@@ -138,6 +138,12 @@
   flex-shrink: 0;
 }
 
+.user-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .notif-bell {
   position: relative;
   display: inline-flex;
@@ -205,6 +211,13 @@
   color: var(--text-primary);
   font-size: 0.95rem;
   font-weight: 500;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 36px;
 }
 
 @media (max-width: 768px) {
@@ -217,6 +230,16 @@
   .user-info span {
     display: none;
   }
+}
+
+.user-info:hover {
+  border-color: rgba(0, 217, 255, 0.25);
+  box-shadow: 0 6px 16px rgba(0, 217, 255, 0.15);
+}
+
+.user-info.open {
+  border-color: rgba(0, 217, 255, 0.5);
+  box-shadow: 0 10px 24px rgba(0, 217, 255, 0.2);
 }
 
 .user-avatar {
@@ -233,6 +256,65 @@
 .user-role {
   color: var(--text-secondary);
   font-weight: 500;
+}
+
+.user-card {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: 280px;
+  background: rgba(10, 12, 22, 0.95);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 217, 255, 0.08);
+  padding: 14px;
+  z-index: 1100;
+  backdrop-filter: blur(8px);
+}
+
+.user-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.92rem;
+}
+
+.user-card-row:last-child {
+  border-bottom: none;
+}
+
+.user-card-label {
+  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.user-card-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  text-align: right;
+}
+
+.user-card-pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0c121f;
+  text-transform: capitalize;
+}
+
+.pill-ok {
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+}
+
+.pill-warn {
+  background: linear-gradient(135deg, #fbbf24, #f97316);
 }
 
 .logout-btn {

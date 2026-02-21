@@ -69,6 +69,37 @@ interface LayoutProps {
   onLogout: () => void;
 }
 
+const extractPendingAdmins = (payload: any) => {
+  if (!payload) return [] as any[];
+  if (Array.isArray(payload)) return payload;
+
+  const data = (payload as any).data ?? payload;
+  const candidates = [
+    (payload as any).pending,
+    (payload as any).pendingAdmins,
+    (payload as any).pending_admins,
+    (payload as any).admins,
+    (payload as any).users,
+    (data as any).pending,
+    (data as any).pendingAdmins,
+    (data as any).pending_admins,
+    (data as any).admins,
+    (data as any).users,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+  }
+
+  if (data && typeof data === 'object') {
+    for (const value of Object.values(data)) {
+      if (Array.isArray(value)) return value;
+    }
+  }
+
+  return [] as any[];
+};
+
 export function Layout({ children, onLogout }: LayoutProps) {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -94,6 +125,26 @@ export function Layout({ children, onLogout }: LayoutProps) {
     setSidebarOpen(false);
   };
 
+  const fetchPendingAdmins = async (forceRefresh: boolean = false) => {
+    if (!user || user.role !== 'admin') {
+      setPendingAdmins([]);
+      return;
+    }
+
+    setPendingLoading(true);
+    setPendingError(null);
+    try {
+      const res = await authAPI.getPendingAdmins({ forceRefresh });
+      const list = extractPendingAdmins(res);
+      setPendingAdmins(list);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load admin requests';
+      setPendingError(message);
+    } finally {
+      setPendingLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (user?.role !== 'admin') {
       setAdminApprovalsOpen(false);
@@ -102,23 +153,7 @@ export function Layout({ children, onLogout }: LayoutProps) {
 
   useEffect(() => {
     const loadPending = async () => {
-      if (!user || user.role !== 'admin') {
-        setPendingAdmins([]);
-        return;
-      }
-
-      setPendingLoading(true);
-      setPendingError(null);
-      try {
-        const res = await authAPI.getPendingAdmins();
-        const list = (res as any).pending ?? res;
-        setPendingAdmins(Array.isArray(list) ? list : []);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to load admin requests';
-        setPendingError(message);
-      } finally {
-        setPendingLoading(false);
-      }
+      await fetchPendingAdmins(true);
     };
 
     loadPending();
@@ -126,7 +161,13 @@ export function Layout({ children, onLogout }: LayoutProps) {
 
   const handleAdminBellClick = () => {
     if (user?.role !== 'admin') return;
-    setAdminApprovalsOpen((open) => !open);
+    setAdminApprovalsOpen((open) => {
+      const next = !open;
+      if (next) {
+        fetchPendingAdmins(true);
+      }
+      return next;
+    });
   };
 
   const handleApprove = async (userId: string) => {
@@ -134,9 +175,8 @@ export function Layout({ children, onLogout }: LayoutProps) {
     setPendingError(null);
     try {
       await authAPI.approveAdmin(userId);
-      const res = await authAPI.getPendingAdmins();
-      const list = (res as any).pending ?? res;
-      setPendingAdmins(Array.isArray(list) ? list : []);
+      setPendingAdmins((prev) => prev.filter((u) => u.id !== userId));
+      await fetchPendingAdmins(true);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to approve admin request';
       setPendingError(message);
@@ -174,19 +214,7 @@ export function Layout({ children, onLogout }: LayoutProps) {
                       type="button"
                       className="admin-approvals-button secondary"
                       onClick={() => {
-                        setPendingLoading(true);
-                        authAPI
-                          .getPendingAdmins()
-                          .then((res) => {
-                            const list = (res as any).pending ?? res;
-                            setPendingAdmins(Array.isArray(list) ? list : []);
-                            setPendingError(null);
-                          })
-                          .catch((err) => {
-                            const message = err instanceof Error ? err.message : 'Failed to refresh requests';
-                            setPendingError(message);
-                          })
-                          .finally(() => setPendingLoading(false));
+                        fetchPendingAdmins(true);
                       }}
                       disabled={pendingLoading}
                     >
