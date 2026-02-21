@@ -1,4 +1,4 @@
-# TechNexus - Event & Attendance Management System
+#Event & Attendance Management System
 
 A production-ready, full-stack Event & Attendance Management System built with React, TypeScript, Express, and Supabase. Features real-time dashboards, CSV imports, auto-blocking logic, and a sleek neon Gen-Z UI.
 
