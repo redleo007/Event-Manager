@@ -26,6 +26,7 @@
   --spacing-lg: 16px;
   --spacing-xl: 24px;
   --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -54,7 +55,18 @@ body {
   color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg,
+canvas,
+picture,
+video {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 /* ================================

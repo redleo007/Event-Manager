@@ -44,8 +44,8 @@
   flex-direction: row;
   align-items: center;
   text-align: left;
-  max-width: 360px;
-  min-width: 320px;
+  max-width: 100%;
+  min-width: 0;
   gap: var(--spacing-lg);
   padding: var(--spacing-lg);
 }
@@ -98,6 +98,7 @@
   gap: 16px;
   flex-wrap: wrap;
   margin-bottom: 20px;
+  min-width: 0;
 }
 
 .search-container {
@@ -123,6 +124,7 @@
 .action-buttons {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 /* ================= ADD FORM ================= */
@@ -150,6 +152,12 @@
   grid-column: 1 / -1;
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
+}
+
+.form-actions .btn {
+  flex: 1;
+  min-width: 140px;
 }
 
 /* ================= TABLE ================= */

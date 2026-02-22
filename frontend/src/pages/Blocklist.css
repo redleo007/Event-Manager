@@ -1,11 +1,26 @@
 .blocklist {
   animation: fadeIn 0.5s ease;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+  --accent: var(--neon-cyan);
+  --accent-ghost: rgba(0, 217, 255, 0.08);
+  --danger-gradient: linear-gradient(90deg, #ff4d6d, #ff8c42);
+  --danger-border: rgba(255, 77, 109, 0.55);
+  --danger-shadow: 0 10px 22px rgba(255, 77, 109, 0.35);
 }
-    --accent: var(--neon-cyan);
-    --accent-ghost: rgba(0, 217, 255, 0.08);
-    --danger-gradient: linear-gradient(90deg, #ff4d6d, #ff8c42);
-    --danger-border: rgba(255, 77, 109, 0.55);
-    --danger-shadow: 0 10px 22px rgba(255, 77, 109, 0.35);
+
+@media (max-width: 768px) {
+  .blocklist {
+    padding: 0 var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .blocklist {
+    padding: 0 var(--spacing-sm);
+  }
+}
 
 .page-header {
   margin-bottom: var(--spacing-xl);
@@ -33,7 +48,9 @@
   .page-header h1 {
     font-size: 1.5rem;
   }
+}
 
+@media (max-width: 480px) {
   .page-header h1 {
     font-size: 1.25rem;
   }
@@ -215,7 +232,8 @@
 }
 
 .add-form-section select,
-.add-form-section textarea {
+.add-form-section textarea,
+.add-form-section input {
   width: 100%;
   padding: 10px 12px;
   border-radius: var(--radius-md);
@@ -227,29 +245,27 @@
   color: var(--text-primary);
 }
 
-.add-form-section select,
-.add-form-section textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  font-size: 0.9rem;
-  font-family: inherit;
-  transition: all 0.3s ease;
-  background: var(--input-bg);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-}
 .add-form-section select:focus,
-.add-form-section textarea:focus {
+.add-form-section textarea:focus,
+.add-form-section input:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 15px rgba(0, 217, 255, 0.2);
   background: var(--card-bg);
 }
+
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .form-actions .btn {
   flex: 1;
+  min-width: 160px;
 }
 
 .blocklist-items {
@@ -346,16 +362,6 @@
   border: 1px solid var(--neon-cyan);
 }
 
-.form-actions {
-  grid-column: 1 / -1;
-  display: flex;
-  gap: 12px;
-  margin-top: 10px;
-  justify-content: flex-end;
-}
-.form-actions .btn {
-  flex: 1;
-}
 .empty-state {
   text-align: center;
   padding: 60px 20px;
